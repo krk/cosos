@@ -1,0 +1,12 @@
+LIBRARY "COSOS.DLL"
+
+EXPORTS
+    DebugExtensionInitialize
+    DebugExtensionUninitialize
+    DebugExtensionNotify
+    gcview
+    GCview = gcview
+    GCVIEW = gcview
+    help
+    Help = help
+    HELP = help

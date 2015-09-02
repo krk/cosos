@@ -1,0 +1,93 @@
+// Copyright (c) 2015 Kerem KAT 
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files(the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and / or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions :
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Do not hesisate to contact me about usage of the code or to make comments 
+// about the code. Your feedback will be appreciated.
+//
+// http://dissipatedheat.com/
+// http://github.com/krk/
+
+/**
+\file StdioOutputCallbacks.h
+
+Defines the StdioOutputCallbacks class.
+*/
+
+#ifndef __STDIOOUTPUTCALLBACKS_H__
+
+#define __STDIOOUTPUTCALLBACKS_H__
+
+#include <string>
+#include <sstream>
+#include <dbgeng.h>
+
+/**
+\class StdioOutputCallbacks
+
+Handles and buffers debugger engine output callbacks.
+*/
+class StdioOutputCallbacks : public IDebugOutputCallbacks
+{
+private:
+	std::string m_OutputBuffer;
+
+	CHAR m_OutPutBuffer[4096]; //!< This buffer holds the output from the command execution.
+public:
+	void Reset();
+
+	/**
+	Gets the buffer.
+	*/
+	std::string GetOutputBuffer()
+	{
+		return m_OutputBuffer;
+	};
+
+	/**
+	Clears the buffer.
+	*/
+	void Clear()
+	{
+		m_OutputBuffer = "";
+	};
+
+	STDMETHOD(QueryInterface)(
+		THIS_
+		IN REFIID InterfaceId,
+		OUT PVOID* Interface
+		);
+
+	STDMETHOD_(ULONG, AddRef)(
+		THIS
+		);
+
+	STDMETHOD_(ULONG, Release)(
+		THIS
+		);
+
+	STDMETHOD(Output)(
+		THIS_
+		IN ULONG Mask,
+		IN PCSTR Text
+		);
+};
+
+extern StdioOutputCallbacks g_OutputCb;
+
+#endif // #ifndef __STDIOOUTPUTCALLBACKS_H__
