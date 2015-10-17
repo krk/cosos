@@ -7,6 +7,9 @@ EXPORTS
     gcview
     GCview = gcview
     GCVIEW = gcview
+    waitingforobjects
+    wfo = waitingforobjects
+    WaitingForObjects = waitingforobjects
     help
     Help = help
     HELP = help

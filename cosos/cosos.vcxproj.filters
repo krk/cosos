@@ -71,6 +71,9 @@
     <ClCompile Include="StdioOutputCallbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WaitApiStackParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="cososmainwindow.ui">
@@ -106,6 +109,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StdioOutputCallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WaitApiStackParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

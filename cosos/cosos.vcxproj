@@ -108,6 +108,7 @@
     <ClCompile Include="MemoryRangeAnalyzer.cpp" />
     <ClCompile Include="QtMessagePump.cpp" />
     <ClCompile Include="StdioOutputCallbacks.cpp" />
+    <ClCompile Include="WaitApiStackParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="cososmainwindow.ui">
@@ -127,6 +128,7 @@
     <ClInclude Include="MemoryRangeAnalyzer.h" />
     <ClInclude Include="QtMessagePump.h" />
     <ClInclude Include="StdioOutputCallbacks.h" />
+    <ClInclude Include="WaitApiStackParser.h" />
     <CustomBuild Include="CososMainWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing CososMainWindow.h...</Message>

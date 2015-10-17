@@ -40,6 +40,7 @@ Implements Extension class that provides entry points to the debugging engine.
 #include "MemoryRangeAnalyzer.h"
 #include "StdioOutputCallbacks.h"
 #include "GcViewDescriptor.h"
+#include "WaitApiStackParser.h"
 
 //----------------------------------------------------------------------------
 //
@@ -56,6 +57,8 @@ class EXT_CLASS : public ExtExtension
 {
 private:
 	QtMessagePump _messagePump;
+	std::string ExecuteCommand(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control, const std::string& command);
+	bool ExecuteCommand(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control, const std::string& command, std::string& output);
 
 public:
 	~EXT_CLASS();
@@ -64,6 +67,7 @@ public:
 	void Uninitialize(void) override;
 
 	EXT_COMMAND_METHOD(gcview);
+	EXT_COMMAND_METHOD(waitingforobjects);
 };
 
 // EXT_DECLARE_GLOBALS must be used to instantiate
@@ -95,9 +99,9 @@ HRESULT EXT_CLASS::Initialize()
 	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
 
 #if _DEBUG
-	dprintf("COSOS v0.1.0 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.0 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
 #else
-	dprintf("COSOS v0.1.0 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.0 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
 #endif
 
 	DebugControl->Release();
@@ -150,23 +154,12 @@ EXT_COMMAND(gcview,
 	dprintf("Reading addresses...\n");
 
 	// Get address map.
-	if (DebugControl->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
-		DEBUG_OUTCTL_OVERRIDE_MASK |
-		DEBUG_OUTCTL_NOT_LOGGED,
-		"!address",
-		DEBUG_EXECUTE_DEFAULT) != S_OK)
+	std::string addressOutput;
+
+	if (!ExecuteCommand(DebugClient, DebugControl, "!address", addressOutput))
 	{
-		dprintf("Executing !address failed\n");
-
-		DebugControl->Release();
-		DebugClient->Release();
-
 		return;
 	}
-
-	auto addressOutput = std::string(g_OutputCb.GetOutputBuffer());
-
-	g_OutputCb.Clear();
 
 	auto addressParser = AddressParser();
 	auto addresses = RangeList(addressParser.Parse(addressOutput));
@@ -176,23 +169,12 @@ EXT_COMMAND(gcview,
 	dprintf("Reading heap blocks...\n");
 
 	// Get GC heap map.
-	if (DebugControl->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
-		DEBUG_OUTCTL_OVERRIDE_MASK |
-		DEBUG_OUTCTL_NOT_LOGGED,
-		"!eeheap -gc",
-		DEBUG_EXECUTE_DEFAULT) != S_OK)
+	std::string eeheapOutput;
+
+	if (!ExecuteCommand(DebugClient, DebugControl, "!eeheap -gc", eeheapOutput))
 	{
-		dprintf("Executing !eeheap -gc failed\n");
-
-		DebugControl->Release();
-		DebugClient->Release();
-
 		return;
 	}
-
-	auto eeheapOutput = std::string(g_OutputCb.GetOutputBuffer());
-
-	g_OutputCb.Clear();
 
 	auto eeheapParser = EEHeapParser();
 	auto heapAddresses = RangeList(eeheapParser.Parse(eeheapOutput));
@@ -230,6 +212,249 @@ EXT_COMMAND(gcview,
 		GcViewDescriptor::saveImages(addresses, heapAddresses, nativeFilename.c_str(), gcFilename.c_str());
 
 		dprintf("gcview images saved.\n");
+	}
+
+	DebugClient->SetOutputCallbacks(nullptr);
+
+	DebugControl->Release();
+	DebugClient->Release();
+}
+
+bool EXT_CLASS::ExecuteCommand(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control, const std::string& command, std::string& output)
+{
+	g_OutputCb.Clear();
+
+	if (debug_control->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
+		DEBUG_OUTCTL_OVERRIDE_MASK |
+		DEBUG_OUTCTL_NOT_LOGGED,
+		command.c_str(),
+		DEBUG_EXECUTE_DEFAULT) != S_OK)
+	{
+		dprintf("handle details command failed\n");
+
+		debug_control->Release();
+		debug_client->Release();
+
+		g_OutputCb.Clear();
+
+		return false;
+	}
+
+	output = std::string(g_OutputCb.GetOutputBuffer());
+
+	g_OutputCb.Clear();
+
+	return true;
+}
+
+/**
+Implements waitingforobjects command of this extension.
+*/
+EXT_COMMAND(waitingforobjects,
+	"Finds kernel objects that are waited upon by threads.",
+	"{;x,o;;msg}" // Arguments: https://msdn.microsoft.com/en-us/library/windows/hardware/ff553340(v=vs.85).aspx
+	)
+{
+	PDEBUG_CLIENT DebugClient;
+	PDEBUG_CONTROL DebugControl;
+
+	DebugCreate(__uuidof(IDebugClient), (void **) &DebugClient);
+
+	DebugClient->QueryInterface(__uuidof(IDebugControl), (void **) &DebugControl);
+
+	ExtensionApis.nSize = sizeof(ExtensionApis);
+	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
+
+	g_OutputCb.Reset();
+
+	// Install output callbacks.
+	if ((DebugClient->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS) &g_OutputCb)) != S_OK)
+	{
+		dprintf("Error while installing OutputCallback.\n\n");
+
+		DebugControl->Release();
+		DebugClient->Release();
+
+		return;
+	}
+
+	// Get stack traces.
+	std::string stackTracesOutput;
+
+	if (!ExecuteCommand(DebugClient, DebugControl, "~*e ?@@c++(@$teb->ClientId.UniqueThread); kv 1;", stackTracesOutput))
+	{
+		return;
+	}
+
+	auto wap = WaitApiStackParser();
+
+	auto objectDescriptors = wap.Parse(stackTracesOutput);
+
+	auto handles = std::vector<std::pair<unsigned long, unsigned long>>();
+
+	for (auto descriptor : *objectDescriptors)
+	{
+		if (descriptor.is_value_address())
+		{
+			auto addresses = new ULONG[descriptor.get_count()];
+
+			memset(addresses, 0xFFFFFFFF, descriptor.get_count());
+
+			ULONG bytes_read;
+
+			// read memory.
+			ReadMemory(descriptor.get_value(), addresses, sizeof(ULONG) * descriptor.get_count(), &bytes_read);
+
+			if (bytes_read)
+			{
+				for (int i = 0; i < descriptor.get_count(); i++)
+				{
+					handles.push_back(std::make_pair(descriptor.get_thread_id(), addresses[i]));
+				}
+			}
+
+			delete addresses;
+		}
+		else
+		{
+			// value is handle.
+			handles.push_back(std::make_pair(descriptor.get_thread_id(), descriptor.get_value()));
+		}
+	}
+
+	delete objectDescriptors;
+
+	std::sort(handles.begin(), handles.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.second < b.second; });
+
+	std::string htrace_detect_output;
+
+	if (!ExecuteCommand(DebugClient, DebugControl, "!htrace 1", htrace_detect_output))
+	{
+		return;
+	}
+
+	// Save wait graph.
+	bool save_graph = this->HasUnnamedArg(0);
+	auto filename = save_graph ? this->GetUnnamedArgStr(0) : nullptr;
+
+	// Warning suggests to turn on htrace.
+	auto is_htrace_enabled = htrace_detect_output.find("!htrace -enable") == std::string::npos;
+
+	g_OutputCb.Clear();
+
+	unsigned long prev_handle = 0;
+
+	bool handles_found = false;
+
+	std::ofstream dot_file;
+
+	if (save_graph)
+	{
+		dot_file = std::ofstream(filename);
+
+		dot_file << "digraph {\n";
+	}
+
+	// TODO abstract-out. CommandExecutor interface, WinDbgCommandExecutor + UnitTestFakeCommandExecutor.
+	for (auto thread_handle : handles)
+	{
+		g_OutputCb.Clear();
+
+		std::stringstream sstream;
+		sstream << std::hex << thread_handle.second;
+		auto hex_handle = sstream.str();
+
+		auto handle_command = std::string("!handle ") + hex_handle;
+
+		std::string handle_output;
+
+		if (!ExecuteCommand(DebugClient, DebugControl, handle_command, handle_output))
+		{
+			return;
+		}
+
+		std::string handle_type;
+
+		/* Get last word */
+		auto last_tab_index = handle_output.find_last_of('\t');
+
+		if (last_tab_index != std::string::npos)
+		{
+			handle_type = handle_output.substr(last_tab_index + 1, handle_output.length() - last_tab_index - 2);
+		}
+
+		if (prev_handle != thread_handle.second)
+		{
+			if (is_htrace_enabled)
+			{
+				auto htrace_command = std::string("!htrace ") + hex_handle;
+
+				std::string htrace_output;
+
+				if (!ExecuteCommand(DebugClient, DebugControl, htrace_command, htrace_output))
+				{
+					return;
+				}
+
+				/* Find last opener. */
+				auto open_index = htrace_output.find(" - OPEN");
+				bool is_thread_id_found = false;
+
+				if (open_index != std::string::npos)
+				{
+					auto thread_id_index = htrace_output.find("Thread ID = 0x", open_index);
+
+					if (thread_id_index != std::string::npos)
+					{
+						auto thread_id_hex = htrace_output.substr(thread_id_index + 14, 8);
+						auto last_opener_thread = std::stoul(thread_id_hex, nullptr, 16);
+
+						this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s last opened by <?dml?><exec cmd=\"~~[%x]s\">%x</exec>:\n", thread_handle.second, thread_handle.second, handle_type.c_str(), last_opener_thread, last_opener_thread);
+
+						if (save_graph)
+						{
+							auto handle_node = "\"" + hex_handle + " " + handle_type + "\"";
+
+							dot_file << last_opener_thread << " -> " << handle_node << "[label = \"last opened\"]" << std::endl;
+						}
+
+						is_thread_id_found = true;
+					}
+				}
+
+				if (!is_thread_id_found)
+				{
+					this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s:\n", thread_handle.second, thread_handle.second, handle_type.c_str());
+				}
+			}
+			else
+			{
+				this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s:\n", thread_handle.second, thread_handle.second, handle_type.c_str());
+			}
+		}
+
+		this->Dml("\t<?dml?><exec cmd=\"~~[%x]s\">%x</exec>\n", thread_handle.first, thread_handle.first);
+
+		if (save_graph)
+		{
+			auto handle_node = "\"" + hex_handle + " " + handle_type + "\"";
+
+			dot_file << thread_handle.first << " -> " << handle_node << "[label = \"is waiting\"]" << std::endl;
+		}
+
+		handles_found = true;
+
+		prev_handle = thread_handle.second;
+	}
+
+	if (save_graph)
+	{
+		dot_file << "}";
+	}
+
+	if (!handles_found)
+	{
+		dprintf("No waiting handles found in stack traces. WARNING: This does not prove threads aren't waiting on waitable objects.\n");
 	}
 
 	DebugClient->SetOutputCallbacks(nullptr);
