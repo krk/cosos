@@ -38,9 +38,6 @@
     <ClCompile Include="GeneratedFiles\qrc_cososmainwindow.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="AddressParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CososMainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -50,19 +47,7 @@
     <ClCompile Include="GeneratedFiles\Release\moc_CososMainWindow.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="EEHeapParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Extension.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GcViewDescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryRange.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryRangeAnalyzer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QtMessagePump.cpp">
@@ -77,22 +62,13 @@
     <ClCompile Include="WinDbgCommandExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HandleCommandOutput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HandleCommandParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DbgEngLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HtraceCommandParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HtraceCommandOutput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DbgEngMemoryReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GcViewDescriptor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -111,21 +87,6 @@
     <ClInclude Include="GeneratedFiles\ui_cososmainwindow.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="AddressParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EEHeapParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GcViewDescriptor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MemoryRange.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MemoryRangeAnalyzer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="QtMessagePump.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -135,34 +96,16 @@
     <ClInclude Include="WaitApiStackParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HandleCommandParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HandleCommandOutput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IDebuggerCommandExecutor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ILogger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DbgEngLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DbgEngCommandExecutor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HtraceCommandParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HtraceCommandOutput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMemoryReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DbgEngMemoryReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GcViewDescriptor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

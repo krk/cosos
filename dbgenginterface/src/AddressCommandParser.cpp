@@ -34,14 +34,35 @@ Implements AddressParser class that parses native !address output.
 #include <sstream>
 #include <algorithm>
 
-#include "AddressParser.h"
+#include "AddressCommandParser.h"
+
+/**
+Executes address command and parses the output.
+
+\param handle Value of the handle.
+*/
+AddressCommandOutput AddressCommandParser::execute()
+{
+	std::string output;
+
+	if (!_executor->ExecuteCommand(_command, output))
+	{
+		_logger->Log("Cannot get address info.\n");
+
+		return AddressCommandOutput();
+	}
+
+	auto ranges = Parse(output);
+
+	return AddressCommandOutput(RangeList(ranges));
+}
 
 /**
 Parses tokenized strings in a single line of an address output to find the usage information.
 
 \param items Line tokens.
 */
-Usage AddressParser::GetUsage(const std::vector<std::string>& items)
+Usage AddressCommandParser::GetUsage(const std::vector<std::string>& items)
 {
 	auto ret = Usage::Undefined;
 
@@ -77,7 +98,7 @@ Parses tokenized strings in a single line of an address output to find the state
 
 \param items Line tokens.
 */
-State AddressParser::GetState(const std::vector<std::string>& items)
+State AddressCommandParser::GetState(const std::vector<std::string>& items)
 {
 	auto ret = State::Commit;
 
@@ -99,7 +120,7 @@ Parses lines of an address output to find the range information.
 
 \param lines Address output lines.
 */
-std::vector<const MemoryRange>* AddressParser::Parse(const std::string& lines)
+std::vector<const MemoryRange>* AddressCommandParser::Parse(const std::string& lines)
 {
 	auto ret = new std::vector<const MemoryRange>();
 

@@ -47,7 +47,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Debuggers\inc;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dbgenginterface\inc;C:\Program Files (x86)\Windows Kits\10\Debuggers\inc;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -65,7 +65,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Debuggers\inc;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dbgenginterface\inc;C:\Program Files (x86)\Windows Kits\10\Debuggers\inc;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -87,11 +87,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AddressParser.cpp" />
     <ClCompile Include="CososMainWindow.cpp" />
     <ClCompile Include="DbgEngLogger.cpp" />
     <ClCompile Include="DbgEngMemoryReader.cpp" />
-    <ClCompile Include="EEHeapParser.cpp" />
     <ClCompile Include="Extension.cpp" />
     <ClCompile Include="GcViewDescriptor.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_CososMainWindow.cpp">
@@ -106,12 +104,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_CososMainWindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="HandleCommandOutput.cpp" />
-    <ClCompile Include="HandleCommandParser.cpp" />
-    <ClCompile Include="HtraceCommandOutput.cpp" />
-    <ClCompile Include="HtraceCommandParser.cpp" />
-    <ClCompile Include="MemoryRange.cpp" />
-    <ClCompile Include="MemoryRangeAnalyzer.cpp" />
     <ClCompile Include="QtMessagePump.cpp" />
     <ClCompile Include="StdioOutputCallbacks.cpp" />
     <ClCompile Include="WaitApiStackParser.cpp" />
@@ -130,18 +122,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddressParser.h" />
     <ClInclude Include="DbgEngLogger.h" />
     <ClInclude Include="DbgEngMemoryReader.h" />
-    <ClInclude Include="HtraceCommandOutput.h" />
-    <ClInclude Include="HtraceCommandParser.h" />
-    <ClInclude Include="IDebuggerCommandExecutor.h" />
-    <ClInclude Include="HandleCommandParser.h" />
-    <ClInclude Include="HandleCommandOutput.h" />
-    <ClInclude Include="ILogger.h" />
-    <ClInclude Include="IMemoryReader.h" />
-    <ClInclude Include="MemoryRange.h" />
-    <ClInclude Include="MemoryRangeAnalyzer.h" />
+    <ClInclude Include="GcViewDescriptor.h" />
     <ClInclude Include="QtMessagePump.h" />
     <ClInclude Include="StdioOutputCallbacks.h" />
     <ClInclude Include="WaitApiStackParser.h" />
@@ -156,8 +139,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DWIN64 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -D_WINDLL "-IC:\Program Files (x86)\Windows Kits\10\Debuggers\inc" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtWidgets"</Command>
     </CustomBuild>
-    <ClInclude Include="EEHeapParser.h" />
-    <ClInclude Include="GcViewDescriptor.h" />
     <ClInclude Include="GeneratedFiles\ui_cososmainwindow.h" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +155,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cosos.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\dbgenginterface\dbgenginterface.vcxproj">
+      <Project>{a4f67b39-f71b-4600-ad30-9612bfdd3932}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

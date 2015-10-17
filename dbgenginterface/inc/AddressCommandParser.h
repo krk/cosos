@@ -39,23 +39,34 @@ Defines the AddressParser class.
 #include <sstream>
 #include <vector>
 
+#include "IDebuggerCommandExecutor.h"
+#include "ILogger.h"
+#include "AddressCommandOutput.h"
+
 /**
 \class AddressParser
 
 Implements a parser for address outputs.
 */
-class AddressParser
+class AddressCommandParser
 {
 private:
+	const std::string _command = "!address";
+	IDebuggerCommandExecutor* _executor;
+	ILogger* _logger;
+
 	::Usage GetUsage(const std::vector<std::string>& items);
 	::State GetState(const std::vector<std::string>& items);
+	std::vector<const MemoryRange>* Parse(const std::string& lines);
 
 public:
-	AddressParser()
+	AddressCommandParser(IDebuggerCommandExecutor* executor, ILogger* logger)
+		: _executor(executor), _logger(logger)
 	{
+
 	}
 
-	std::vector<const MemoryRange>* Parse(const std::string& lines);
+	AddressCommandOutput execute();
 };
 
 #endif // #ifndef __ADDRESSPARSER_H__

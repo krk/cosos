@@ -24,59 +24,17 @@
 // http://github.com/krk/
 
 /**
-\file GcViewDescriptor.h
+\file AddressCommandOutput.cpp
 
-Defines the GcViewDescriptor class.
+Implements AddressCommandOutput class that represents output of the !handle command.
 */
 
-#ifndef __GCVIEWDESCRIPTOR_H__
-
-#define __GCVIEWDESCRIPTOR_H__
-
-#include <string>
-#include <vector>
-#include <memory>
-#include <qpixmap.h>
-
-#include "MemoryRange.h"
+#include "AddressCommandOutput.h"
 
 /**
-\class GcViewDescriptor
-
-Represents renderable heap information.
+Returns the parsed address ranges.
 */
-class GcViewDescriptor
+RangeList AddressCommandOutput::get_ranges()
 {
-private:
-	static const int IMAGE_WIDTH = 2048;
-	static const int IMAGE_HEIGHT = 512;
-
-	static unsigned char* createImage(RangeList ranges, RangeList gcRanges);
-	static unsigned char* createImage(RangeList ranges, bool isMonochrome = false);
-	static void drawImage(unsigned char* image, RangeList ranges, bool isMonochrome = false);
-
-	void updateImages();
-
-	static QRgb getColor(State state, Usage usage);
-
-public:
-	std::string _freeblockinfo;
-	std::string _gcInfo1;
-	std::string _gcInfo2;
-
-	RangeList _ranges = nullptr;
-	RangeList _gcRanges = nullptr;
-
-	void saveImages(const char* filename, const char* gcFilename);
-	static void saveImages(RangeList ranges, RangeList gcRanges, const char* filename, const char* gcFilename);
-
-	const std::pair<unsigned char*, unsigned char*> GcViewDescriptor::getImageBuffers();
-
-	const QPixmap getNullPixmap();
-
-	GcViewDescriptor()
-	{
-	}
-};
-
-#endif // #ifndef __GCVIEWDESCRIPTOR_H__
+	return _ranges;
+}

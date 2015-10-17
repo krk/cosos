@@ -24,59 +24,47 @@
 // http://github.com/krk/
 
 /**
-\file GcViewDescriptor.h
+\file EEHeapCommandParser.h
 
-Defines the GcViewDescriptor class.
+Defines the EEHeapCommandParser class.
 */
 
-#ifndef __GCVIEWDESCRIPTOR_H__
+#ifndef __EEHEAPCOMMANDPARSER_H__
 
-#define __GCVIEWDESCRIPTOR_H__
-
-#include <string>
-#include <vector>
-#include <memory>
-#include <qpixmap.h>
+#define __EEHEAPCOMMANDPARSER_H__
 
 #include "MemoryRange.h"
 
-/**
-\class GcViewDescriptor
+#include <string>
+#include <sstream>
+#include <vector>
 
-Represents renderable heap information.
+#include "IDebuggerCommandExecutor.h"
+#include "ILogger.h"
+#include "EEHeapCommandOutput.h"
+
+/**
+\class EEHeapCommandParser
+
+Implements a parser for eeheap outputs.
 */
-class GcViewDescriptor
+class EEHeapCommandParser
 {
 private:
-	static const int IMAGE_WIDTH = 2048;
-	static const int IMAGE_HEIGHT = 512;
+	const std::string _command = "!eeheap -gc";
+	IDebuggerCommandExecutor* _executor;
+	ILogger* _logger;
 
-	static unsigned char* createImage(RangeList ranges, RangeList gcRanges);
-	static unsigned char* createImage(RangeList ranges, bool isMonochrome = false);
-	static void drawImage(unsigned char* image, RangeList ranges, bool isMonochrome = false);
-
-	void updateImages();
-
-	static QRgb getColor(State state, Usage usage);
+	std::vector<const MemoryRange>* Parse(const std::string& lines);
 
 public:
-	std::string _freeblockinfo;
-	std::string _gcInfo1;
-	std::string _gcInfo2;
-
-	RangeList _ranges = nullptr;
-	RangeList _gcRanges = nullptr;
-
-	void saveImages(const char* filename, const char* gcFilename);
-	static void saveImages(RangeList ranges, RangeList gcRanges, const char* filename, const char* gcFilename);
-
-	const std::pair<unsigned char*, unsigned char*> GcViewDescriptor::getImageBuffers();
-
-	const QPixmap getNullPixmap();
-
-	GcViewDescriptor()
+	EEHeapCommandParser(IDebuggerCommandExecutor* executor, ILogger* logger)
+		: _executor(executor), _logger(logger)
 	{
+
 	}
+
+	EEHeapCommandOutput execute();
 };
 
-#endif // #ifndef __GCVIEWDESCRIPTOR_H__
+#endif // #ifndef __EEHEAPCOMMANDPARSER_H__

@@ -24,34 +24,17 @@
 // http://github.com/krk/
 
 /**
-\file EEHeapParser.h
+\file EEHeapCommandOutput.cpp
 
-Defines the EEHeapParser class.
+Implements AddressCommandOutput class that represents output of the !handle command.
 */
 
-#ifndef __EEHEAPPARSER_H__
-
-#define __EEHEAPPARSER_H__
-
-#include "MemoryRange.h"
-
-#include <string>
-#include <sstream>
-#include <vector>
+#include "EEHeapCommandOutput.h"
 
 /**
-\class EEHeapParser
-
-Implements a parser for eeheap outputs.
+Returns the parsed eeheap address ranges.
 */
-class EEHeapParser
+RangeList EEHeapCommandOutput::get_ranges()
 {
-public:
-	EEHeapParser()
-	{
-	}
-
-	std::vector<const MemoryRange>* Parse(const std::string& lines);
-};
-
-#endif // #ifndef __EEHEAPPARSER_H__
+	return _ranges;
+}

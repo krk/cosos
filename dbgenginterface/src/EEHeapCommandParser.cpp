@@ -34,14 +34,35 @@ Implements EEHeapParser class that parses native !eeheap -gc output.
 #include <sstream>
 #include <algorithm>
 
-#include "EEHeapParser.h"
+#include "EEHeapCommandParser.h"
+
+/**
+Executes address command and parses the output.
+
+\param handle Value of the handle.
+*/
+EEHeapCommandOutput EEHeapCommandParser::execute()
+{
+	std::string output;
+
+	if (!_executor->ExecuteCommand(_command, output))
+	{
+		_logger->Log("Cannot get eeheap info.\n");
+
+		return EEHeapCommandOutput();
+	}
+
+	auto ranges = Parse(output);
+
+	return EEHeapCommandOutput(RangeList(ranges));
+}
 
 /**
 Parses lines of an address output to find the range information.
 
 \param lines Address output lines.
 */
-std::vector<const MemoryRange>* EEHeapParser::Parse(const std::string& lines)
+std::vector<const MemoryRange>* EEHeapCommandParser::Parse(const std::string& lines)
 {
 	auto ret = new std::vector<const MemoryRange>();
 

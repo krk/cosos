@@ -24,59 +24,42 @@
 // http://github.com/krk/
 
 /**
-\file GcViewDescriptor.h
+\file EEHeapCommandOutput.h
 
-Defines the GcViewDescriptor class.
+Defines the EEHeapCommandOutput class.
 */
 
-#ifndef __GCVIEWDESCRIPTOR_H__
+#ifndef __EEHEAPCOMMANDOUTPUT_H__
 
-#define __GCVIEWDESCRIPTOR_H__
-
-#include <string>
-#include <vector>
-#include <memory>
-#include <qpixmap.h>
+#define __EEHEAPCOMMANDOUTPUT_H__
 
 #include "MemoryRange.h"
 
 /**
-\class GcViewDescriptor
+\class EEHeapCommandOutput
 
-Represents renderable heap information.
+Represents output of the !handle command.
 */
-class GcViewDescriptor
+class EEHeapCommandOutput
 {
 private:
-	static const int IMAGE_WIDTH = 2048;
-	static const int IMAGE_HEIGHT = 512;
-
-	static unsigned char* createImage(RangeList ranges, RangeList gcRanges);
-	static unsigned char* createImage(RangeList ranges, bool isMonochrome = false);
-	static void drawImage(unsigned char* image, RangeList ranges, bool isMonochrome = false);
-
-	void updateImages();
-
-	static QRgb getColor(State state, Usage usage);
+	RangeList _ranges = nullptr;
 
 public:
-	std::string _freeblockinfo;
-	std::string _gcInfo1;
-	std::string _gcInfo2;
-
-	RangeList _ranges = nullptr;
-	RangeList _gcRanges = nullptr;
-
-	void saveImages(const char* filename, const char* gcFilename);
-	static void saveImages(RangeList ranges, RangeList gcRanges, const char* filename, const char* gcFilename);
-
-	const std::pair<unsigned char*, unsigned char*> GcViewDescriptor::getImageBuffers();
-
-	const QPixmap getNullPixmap();
-
-	GcViewDescriptor()
+	EEHeapCommandOutput()
 	{
+
 	}
+
+	EEHeapCommandOutput(const RangeList ranges)
+		: _ranges(ranges)
+	{
+
+	}
+
+	RangeList get_ranges();
+
+	bool has_ranges() { return _ranges != nullptr; }
 };
 
-#endif // #ifndef __GCVIEWDESCRIPTOR_H__
+#endif // #ifndef __EEHEAPCOMMANDOUTPUT_H__

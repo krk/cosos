@@ -34,8 +34,8 @@ Implements Extension class that provides entry points to the debugging engine.
 #include <fstream>
 #include <memory>
 
-#include "AddressParser.h"
-#include "EEHeapParser.h"
+#include "AddressCommandParser.h"
+#include "EEHeapCommandParser.h"
 #include "QtMessagePump.h"
 #include "MemoryRangeAnalyzer.h"
 #include "StdioOutputCallbacks.h"
@@ -157,38 +157,39 @@ EXT_COMMAND(gcview,
 	}
 
 	IDebuggerCommandExecutor *executor = &DbgEngCommandExecutor(DebugClient, DebugControl);
+	ILogger *logger = &DbgEngLogger();
 
 	dprintf("Reading addresses...\n");
 
 	// Get address map.
-	std::string addressOutput;
+	auto addressCommandParser = AddressCommandParser(executor, logger);
+	auto addressCommandOutput = addressCommandParser.execute();
 
-	if (!executor->ExecuteCommand("!address", addressOutput))
+	if (addressCommandOutput.has_ranges())
 	{
 		dprintf("Cannot get addresses.\n");
 
 		return;
 	}
 
-	auto addressParser = AddressParser();
-	auto addresses = RangeList(addressParser.Parse(addressOutput));
+	auto addresses = addressCommandOutput.get_ranges();
 
 	dprintf("Parsed %lu address blocks.\n", addresses->size());
 
 	dprintf("Reading heap blocks...\n");
 
 	// Get GC heap map.
-	std::string eeheapOutput;
+	auto eeheapParser = EEHeapCommandParser(executor, logger);
+	auto eeheapOutput = eeheapParser.execute();
 
-	if (!executor->ExecuteCommand("!eeheap -gc", eeheapOutput))
+	if (eeheapOutput.has_ranges())
 	{
 		dprintf("Cannot get eeheap information.\n");
 
 		return;
 	}
 
-	auto eeheapParser = EEHeapParser();
-	auto heapAddresses = RangeList(eeheapParser.Parse(eeheapOutput));
+	auto heapAddresses = eeheapOutput.get_ranges();
 
 	dprintf("Parsed %lu eeheap blocks.\n", heapAddresses->size());
 
