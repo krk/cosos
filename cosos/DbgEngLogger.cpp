@@ -24,40 +24,27 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngLogger.cpp
 
-Defines the MemoryRange class.
+Implements DbgEngLogger class that can log text in DbgEng context.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "DbgEngLogger.h"
+#include <engextcpp.hpp>
 
 /**
-\class MemoryRange
+Constructs an instance of the MemoryRange class.
 
-Represents renderable heap information.
+\param command Command text to execute.
+\param output Output of the command, if successful.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+void DbgEngLogger::Log(const char* lpFormat, ...)
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+	va_list args;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
+	va_start(args, lpFormat);
 
-#endif // #ifndef __MEMORYRANGE_H__
+	dprintf(lpFormat, args);
+
+	va_end(args);
+}

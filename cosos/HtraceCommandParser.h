@@ -24,40 +24,42 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HtraceCommandParser.h
 
-Defines the MemoryRange class.
+Defines the HtraceCommandParser class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __HTRACECOMMANDPARSER_H__
 
-#define __MEMORYRANGE_H__
+#define __HTRACECOMMANDPARSER_H__
 
 #include <memory>
-#include <vector>
+
+#include "IDebuggerCommandExecutor.h"
+#include "ILogger.h"
+#include "HtraceCommandOutput.h"
 
 /**
-\class MemoryRange
+\class HandleCommandParser
 
 Represents renderable heap information.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class HtraceCommandParser
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+private:
+	const std::string _command = "!htrace";
+	IDebuggerCommandExecutor* _executor;
+	ILogger* _logger;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+public:
+	HtraceCommandParser(IDebuggerCommandExecutor* executor, ILogger* logger)
+		: _executor(executor), _logger(logger)
+	{
+
+	}
+
+	HtraceCommandOutput execute(unsigned long handle);
+	bool is_enabled();
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __HTRACECOMMANDPARSER_H__

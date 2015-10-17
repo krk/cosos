@@ -24,40 +24,32 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngMemoryReader.h
 
-Defines the MemoryRange class.
+Defines the DbgEngMemoryReader class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __DBGENGMEMORYREADER_H__
 
-#define __MEMORYRANGE_H__
+#define __DBGENGMEMORYREADER_H__
 
-#include <memory>
-#include <vector>
+#include "IMemoryReader.h"
 
 /**
-\class MemoryRange
+\class DbgEngMemoryReader
 
 Represents renderable heap information.
 */
-class MemoryRange;
 
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class DbgEngMemoryReader : public IMemoryReader
 {
 public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+	DbgEngMemoryReader() { }
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+#pragma push_macro("ReadMemory")
+#undef ReadMemory
+	virtual unsigned long ReadMemory(unsigned long offset, void *lpBuffer, unsigned long cb, unsigned long* lpcbBytesRead) override;
+#pragma pop_macro("ReadMemory")
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __DBGENGMEMORYREADER_H__

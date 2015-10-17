@@ -24,40 +24,46 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HandleCommandParser.cpp
 
-Defines the MemoryRange class.
+Implements HandleCommandParser class that parses the output of the !handle command.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "HandleCommandParser.h"
+#include "HandleCommandOutput.h"
+#include <sstream>
 
 /**
-\class MemoryRange
+Executes a handle command and parses the output.
 
-Represents renderable heap information.
+\param handle Value of the handle.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+HandleCommandOutput HandleCommandParser::execute(unsigned long handle)
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+	std::stringstream sstream;
+	sstream << std::hex << handle;
+	auto hex_handle = sstream.str();
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
+	auto handle_command = _command + " " + hex_handle;
 
-#endif // #ifndef __MEMORYRANGE_H__
+	std::string handle_output;
+
+	if (!_executor->ExecuteCommand(handle_command, handle_output))
+	{
+		_logger->Log("Cannot get handle type for %x.\n", handle);
+
+		return HandleCommandOutput("");
+	}
+
+	std::string handle_type;
+
+	/* Get last word */
+	auto last_tab_index = handle_output.find_last_of('\t');
+
+	if (last_tab_index != std::string::npos)
+	{
+		handle_type = handle_output.substr(last_tab_index + 1, handle_output.length() - last_tab_index - 2);
+	}
+
+	return HandleCommandOutput(handle_type);
+}

@@ -24,40 +24,17 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HandleCommandOutput.cpp
 
-Defines the MemoryRange class.
+Implements HandleCommandOutput class that represents output of the !handle command.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "HandleCommandOutput.h"
 
 /**
-\class MemoryRange
-
-Represents renderable heap information.
+Returns the parsed type of the handle.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+std::string HandleCommandOutput::get_type()
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
-
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
-
-#endif // #ifndef __MEMORYRANGE_H__
+	return _type;
+}

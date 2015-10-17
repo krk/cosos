@@ -24,40 +24,29 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngLogger.h
 
-Defines the MemoryRange class.
+Defines the DbgEngLogger class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __DBGENGLOGGER_H__
 
-#define __MEMORYRANGE_H__
+#define __DBGENGLOGGER_H__
 
-#include <memory>
-#include <vector>
+#include "ILogger.h"
 
 /**
-\class MemoryRange
+\class DbgEngLogger
 
 Represents renderable heap information.
 */
-class MemoryRange;
 
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class DbgEngLogger : public ILogger
 {
 public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+	DbgEngLogger() { }
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+	void Log(const char* lpFormat, ...) override;
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __DBGENGLOGGER_H__

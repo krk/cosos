@@ -24,40 +24,27 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file IDebuggerCommandExecutor.h
 
-Defines the MemoryRange class.
+Defines the IDebuggerCommandExecutor class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __IDEBUGGERCOMMANDEXECUTOR_H__
 
-#define __MEMORYRANGE_H__
+#define __IDEBUGGERCOMMANDEXECUTOR_H__
 
-#include <memory>
-#include <vector>
+#include <string>
 
 /**
-\class MemoryRange
+\class IDebuggerCommandExecutor
 
-Represents renderable heap information.
+Represents a command executor.
 */
-class MemoryRange;
 
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class IDebuggerCommandExecutor
 {
 public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
-
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+	virtual bool ExecuteCommand(const std::string& command, std::string& output) = 0;
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __IDEBUGGERCOMMANDEXECUTOR_H__

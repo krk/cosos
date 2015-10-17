@@ -24,40 +24,25 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HtraceCommandOutput.cpp
 
-Defines the MemoryRange class.
+Implements HtraceCommandOutput class that represents output of the !htrace command.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "HtraceCommandOutput.h"
 
 /**
-\class MemoryRange
-
-Represents renderable heap information.
+Returns the parsed thread id.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+unsigned long HtraceCommandOutput::get_thread_id()
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+	return _thread_id;
+}
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
-
-#endif // #ifndef __MEMORYRANGE_H__
+/**
+Returns true if a thread id was found.
+*/
+bool HtraceCommandOutput::has_thread_id()
+{
+	return _has_thread_id;
+}

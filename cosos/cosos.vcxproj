@@ -89,6 +89,8 @@
   <ItemGroup>
     <ClCompile Include="AddressParser.cpp" />
     <ClCompile Include="CososMainWindow.cpp" />
+    <ClCompile Include="DbgEngLogger.cpp" />
+    <ClCompile Include="DbgEngMemoryReader.cpp" />
     <ClCompile Include="EEHeapParser.cpp" />
     <ClCompile Include="Extension.cpp" />
     <ClCompile Include="GcViewDescriptor.cpp" />
@@ -104,11 +106,16 @@
     <ClCompile Include="GeneratedFiles\Release\moc_CososMainWindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="HandleCommandOutput.cpp" />
+    <ClCompile Include="HandleCommandParser.cpp" />
+    <ClCompile Include="HtraceCommandOutput.cpp" />
+    <ClCompile Include="HtraceCommandParser.cpp" />
     <ClCompile Include="MemoryRange.cpp" />
     <ClCompile Include="MemoryRangeAnalyzer.cpp" />
     <ClCompile Include="QtMessagePump.cpp" />
     <ClCompile Include="StdioOutputCallbacks.cpp" />
     <ClCompile Include="WaitApiStackParser.cpp" />
+    <ClCompile Include="WinDbgCommandExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="cososmainwindow.ui">
@@ -124,11 +131,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddressParser.h" />
+    <ClInclude Include="DbgEngLogger.h" />
+    <ClInclude Include="DbgEngMemoryReader.h" />
+    <ClInclude Include="HtraceCommandOutput.h" />
+    <ClInclude Include="HtraceCommandParser.h" />
+    <ClInclude Include="IDebuggerCommandExecutor.h" />
+    <ClInclude Include="HandleCommandParser.h" />
+    <ClInclude Include="HandleCommandOutput.h" />
+    <ClInclude Include="ILogger.h" />
+    <ClInclude Include="IMemoryReader.h" />
     <ClInclude Include="MemoryRange.h" />
     <ClInclude Include="MemoryRangeAnalyzer.h" />
     <ClInclude Include="QtMessagePump.h" />
     <ClInclude Include="StdioOutputCallbacks.h" />
     <ClInclude Include="WaitApiStackParser.h" />
+    <ClInclude Include="DbgEngCommandExecutor.h" />
     <CustomBuild Include="CososMainWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing CososMainWindow.h...</Message>

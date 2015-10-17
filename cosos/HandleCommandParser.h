@@ -24,40 +24,41 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HandleCommandParser.h
 
-Defines the MemoryRange class.
+Defines the HandleCommandParser class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __HANDLECOMMANDPARSER_H__
 
-#define __MEMORYRANGE_H__
+#define __HANDLECOMMANDPARSER_H__
 
 #include <memory>
-#include <vector>
+
+#include "IDebuggerCommandExecutor.h"
+#include "ILogger.h"
+#include "HandleCommandOutput.h"
 
 /**
-\class MemoryRange
+\class HandleCommandParser
 
 Represents renderable heap information.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class HandleCommandParser
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+private:
+	const std::string _command = "!handle";
+	IDebuggerCommandExecutor* _executor;
+	ILogger* _logger;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+public:
+	HandleCommandParser(IDebuggerCommandExecutor* executor, ILogger* logger)
+		: _executor(executor), _logger(logger)
+	{
+
+	}
+
+	HandleCommandOutput execute(unsigned long handle);
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __HANDLECOMMANDPARSER_H__

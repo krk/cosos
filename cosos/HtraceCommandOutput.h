@@ -24,40 +24,40 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file HandleCommandOutput.h
 
-Defines the MemoryRange class.
+Defines the HandleCommandOutput class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __HTRACECOMMANDOUTPUT_H__
 
-#define __MEMORYRANGE_H__
+#define __HTRACECOMMANDOUTPUT_H__
 
-#include <memory>
-#include <vector>
+#include <string>
 
 /**
-\class MemoryRange
+\class HtraceCommandOutput
 
-Represents renderable heap information.
+Represents output of the !handle command.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class HtraceCommandOutput
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+private:
+	unsigned long _thread_id = 0;
+	bool _has_thread_id = false;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+
+public:
+	HtraceCommandOutput() { }
+
+	HtraceCommandOutput(unsigned long thread_id)
+		: _thread_id(thread_id)
+	{
+		_has_thread_id = true;
+	}
+
+	unsigned long get_thread_id();
+	bool has_thread_id();
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __HTRACECOMMANDOUTPUT_H__

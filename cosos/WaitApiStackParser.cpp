@@ -29,6 +29,7 @@
 Implements WaitApiStackParser for stack trace outputs calling kernel wait APIs.
 */
 
+#include <algorithm>
 #include "WaitApiStackParser.h"
 
 std::map<std::string, std::pair<unsigned long, unsigned long>> WaitApiStackParser::_symbol_object = {
@@ -36,9 +37,17 @@ std::map<std::string, std::pair<unsigned long, unsigned long>> WaitApiStackParse
 	{ "ntdll!NtWaitForSingleObject", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
 	{ "ntdll!NtWaitForMultipleObjects", std::make_pair(2, 1) },
 	{ "ntdll!NtSignalAndWaitForSingleObject", std::make_pair(2, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
+	{ "ntdll!NtWaitForWorkViaWorkerFactory", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
+	{ "ntdll!NtSignalAndWaitForSingleObject", std::make_pair(2, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
+	{ "ntdll!NtWaitForAlertByThreadId", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms687069(v=vs.85).aspx
 };
+
+bool is_handle(std::string symbol_name)
+{
+	return symbol_name != "ntdll!NtWaitForAlertByThreadId";
+}
 
 /**
 Parses a line of stack trace output from WinDbg.
@@ -113,9 +122,10 @@ KernelObjectDescriptor WaitApiStackParser::ParseObjectDescriptor(const PartialSt
 	auto symbol_object = _symbol_object[stackFrame.symbol_name];
 
 	auto address_argument = symbol_object.first;
-	auto object_count = symbol_object.second;
+	auto object_count_argument = symbol_object.second;
 
 	unsigned long value;
+	unsigned long count;
 
 	switch (address_argument)
 	{
@@ -133,7 +143,27 @@ KernelObjectDescriptor WaitApiStackParser::ParseObjectDescriptor(const PartialSt
 		break;
 	}
 
-	return KernelObjectDescriptor(value, object_count);
+	switch (object_count_argument)
+	{
+	case 1:
+		count = stackFrame.arg1;
+		break;
+	case 2:
+		count = stackFrame.arg2;
+		break;
+	case 3:
+		count = stackFrame.arg3;
+		break;
+	default:
+		count = KernelObjectDescriptor::VALUE_NOT_FOUND;
+		break;
+	}
+
+	auto ret = KernelObjectDescriptor(value, count);
+
+	ret.set_handle(is_handle(stackFrame.symbol_name));
+
+	return ret;
 }
 
 /**
@@ -212,4 +242,92 @@ std::vector<const KernelObjectDescriptor>* WaitApiStackParser::Parse(const std::
 	00 0233fc3c 767a2cc7 00000144 00000000 00000000 ntdll!NtWaitForSingleObject+0xc (FPO: [3,0,0])
 	WARNING:
 	*/
+}
+
+/**
+Parses objectDescriptors and fills handles and addresses vectors.
+
+\param objectDescriptors KernelObjectDescriptor list.
+\param handles Parsed handles.
+\param addresses Parsed addresses.
+*/
+/// <summary>
+/// Gets the handles and addresses.
+/// </summary>
+/// <param name="objectDescriptors">The object descriptors.</param>
+/// <param name="handles">The handles.</param>
+/// <param name="addresses">The addresses.</param>
+void WaitApiStackParser::GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses)
+{
+	for (auto descriptor : *objectDescriptors)
+	{
+		if (!descriptor.is_handle())
+		{
+			addresses.push_back(std::make_pair(descriptor.get_thread_id(), descriptor.get_value()));
+
+			continue;
+		}
+
+		if (descriptor.is_value_address())
+		{
+			unsigned long count = descriptor.get_count();
+
+			if (count == 0)
+			{
+				_logger->Log("Multiple object count is zero in thread %x\n", descriptor.get_thread_id());
+
+				continue;
+			}
+
+			if (count == KernelObjectDescriptor::VALUE_NOT_FOUND)
+			{
+				_logger->Log("Multiple object count value not found in thread %x\n", descriptor.get_thread_id());
+
+				continue;
+			}
+
+			auto handle_addresses = new unsigned long[count];
+
+			memset(handle_addresses, 0xFFFFFFFF, count);
+
+			unsigned long bytes_read = 0;
+
+			// read memory.
+			_memory_reader->ReadMemory(descriptor.get_value(), handle_addresses, sizeof(unsigned long) * count, &bytes_read);
+
+			if (bytes_read)
+			{
+				for (int i = 0; i < count; i++)
+				{
+					handles.push_back(std::make_pair(descriptor.get_thread_id(), handle_addresses[i]));
+				}
+			}
+
+			delete handle_addresses;
+		}
+		else
+		{
+			// value is handle.
+			handles.push_back(std::make_pair(descriptor.get_thread_id(), descriptor.get_value()));
+		}
+	}
+
+	std::sort(handles.begin(), handles.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.second < b.second; });
+	std::sort(addresses.begin(), addresses.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.second < b.second; });
+}
+
+/**
+Parses objectDescriptors and fills handles and addresses vectors.
+
+\param command_output Output of all-threads-stack-traces command.
+\param handles Parsed handles.
+\param addresses Parsed addresses.
+*/
+void WaitApiStackParser::GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses)
+{
+	auto objectDescriptors = Parse(command_output);
+
+	GetHandlesAndAddresses(objectDescriptors, handles, addresses);
+
+	delete objectDescriptors;
 }

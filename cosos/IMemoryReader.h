@@ -24,40 +24,32 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file IMemoryReader.h
 
-Defines the MemoryRange class.
+Defines the IMemoryReader class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __IMEMORYREADER_H__
 
-#define __MEMORYRANGE_H__
+#define __IMEMORYREADER_H__
 
-#include <memory>
-#include <vector>
+#include <string>
 
 /**
-\class MemoryRange
+\class IMemoryReader
 
-Represents renderable heap information.
+Represents a command executor.
 */
-class MemoryRange;
 
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class IMemoryReader
 {
 public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+#pragma push_macro("ReadMemory")
+#undef ReadMemory
+	virtual unsigned long ReadMemory(unsigned long offset, void *lpBuffer, unsigned long cb, unsigned long* lpcbBytesRead) = 0;
+#pragma pop_macro("ReadMemory")
+
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __IMEMORYREADER_H__

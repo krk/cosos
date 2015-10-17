@@ -24,40 +24,53 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngCommandExecutor.cpp
 
-Defines the MemoryRange class.
+Implements DbgEngCommandExecutor class that can execute commands in DbgEng context.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "DbgEngCommandExecutor.h"
+#include "StdioOutputCallbacks.h"
 
 /**
-\class MemoryRange
+Constructs an instance of the DbgEngCommandExecutor class.
 
-Represents renderable heap information.
+\param debug_client IDebugClient instance.
+\param debug_control IDebugControl instance.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+DbgEngCommandExecutor::DbgEngCommandExecutor(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control)
+	: _debug_client(debug_client), _debug_control(debug_control)
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
+}
 
-#endif // #ifndef __MEMORYRANGE_H__
+/**
+Constructs an instance of the MemoryRange class.
+
+\param command Command text to execute.
+\param output Output of the command, if successful.
+*/
+bool DbgEngCommandExecutor::ExecuteCommand(const std::string& command, std::string& output)
+{
+	g_OutputCb.Clear();
+
+	if (_debug_control->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
+		DEBUG_OUTCTL_OVERRIDE_MASK |
+		DEBUG_OUTCTL_NOT_LOGGED,
+		command.c_str(),
+		DEBUG_EXECUTE_DEFAULT) != S_OK)
+	{
+		_debug_control->Release();
+		_debug_client->Release();
+
+		g_OutputCb.Clear();
+
+		return false;
+	}
+
+	output = std::string(g_OutputCb.GetOutputBuffer());
+
+	g_OutputCb.Clear();
+
+	return true;
+}

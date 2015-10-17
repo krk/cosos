@@ -33,12 +33,13 @@ Defines the WaitApiStackParser class.
 
 #define __WAITAPISTACKPARSER_H__
 
-#include "MemoryRange.h"
-
 #include <string>
 #include <sstream>
 #include <vector>
 #include <map>
+
+#include "IMemoryReader.h"
+#include "ILogger.h"
 
 /**
 \class PartialStackFrame
@@ -74,6 +75,7 @@ private:
 	unsigned long _thread_id;
 	unsigned long _value;
 	unsigned long _count;
+	bool _is_handle = true;
 
 public:
 	static const unsigned long ADDRESS_IS_IMMEDIATE = -1;
@@ -94,8 +96,10 @@ public:
 	unsigned long get_thread_id(){ return _thread_id; }
 	unsigned long get_value(){ return _value; }
 	unsigned long get_count(){ return _count; }
+	unsigned long is_handle(){ return _is_handle; }
 
 	void set_thread_id(unsigned long thread_id){ _thread_id = thread_id; }
+	void set_handle(unsigned long is_handle){ _is_handle = is_handle; }
 	bool is_value_address(){ return _count != ADDRESS_IS_IMMEDIATE; }
 };
 
@@ -108,18 +112,24 @@ Implements a parser for stack trace outputs calling kernel wait APIs.
 class WaitApiStackParser
 {
 private:
+	IMemoryReader *_memory_reader;
+	ILogger *_logger;
 
 	static std::map<std::string, std::pair<unsigned long, unsigned long>> _symbol_object;
 
-
-public:
 	KernelObjectDescriptor ParseObjectDescriptor(const PartialStackFrame& stackFrame);
 	PartialStackFrame ParseStackFrame(const std::string& line);
-	WaitApiStackParser()
+	std::vector<const KernelObjectDescriptor>* Parse(const std::string& lines);
+
+	void GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses);
+
+public:
+	void GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses);
+
+	WaitApiStackParser(IMemoryReader *memory_reader, ILogger *logger)
+		: _memory_reader(memory_reader), _logger(logger)
 	{
 	}
-
-	std::vector<const KernelObjectDescriptor>* Parse(const std::string& lines);
 };
 
 #endif // #ifndef __WAITAPISTACKPARSER_H__

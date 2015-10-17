@@ -24,40 +24,24 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngMemoryReader.cpp
 
-Defines the MemoryRange class.
+Implements DbgEngMemoryReader class that can log text in DbgEng context.
 */
 
-#ifndef __MEMORYRANGE_H__
-
-#define __MEMORYRANGE_H__
-
-#include <memory>
-#include <vector>
+#include "DbgEngMemoryReader.h"
+#include <engextcpp.hpp>
 
 /**
-\class MemoryRange
+Constructs an instance of the MemoryRange class.
 
-Represents renderable heap information.
+\param command Command text to execute.
+\param output Output of the command, if successful.
 */
-class MemoryRange;
-
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+#pragma push_macro("ReadMemory")
+#undef ReadMemory
+unsigned long DbgEngMemoryReader::ReadMemory(unsigned long offset, void *lpBuffer, unsigned long cb, unsigned long* lpcbBytesRead)
+#pragma pop_macro("ReadMemory")
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
-
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
-};
-
-#endif // #ifndef __MEMORYRANGE_H__
+	return ReadMemory(offset, lpBuffer, cb, lpcbBytesRead);
+}

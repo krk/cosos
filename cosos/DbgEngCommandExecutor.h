@@ -24,40 +24,36 @@
 // http://github.com/krk/
 
 /**
-\file MemoryRange.h
+\file DbgEngCommandExecutor.h
 
-Defines the MemoryRange class.
+Defines the DbgEngCommandExecutor class.
 */
 
-#ifndef __MEMORYRANGE_H__
+#ifndef __DBGENGCOMMANDEXECUTOR_H__
 
-#define __MEMORYRANGE_H__
+#define __DBGENGCOMMANDEXECUTOR_H__
 
-#include <memory>
-#include <vector>
+#include <string>
+#include <engextcpp.hpp>
+
+#include "IDebuggerCommandExecutor.h"
 
 /**
-\class MemoryRange
+\class DbgEngCommandExecutor
 
-Represents renderable heap information.
+Represents DbgEng command executor.
 */
-class MemoryRange;
 
-typedef std::shared_ptr<const std::vector<const MemoryRange>> RangeList;
-
-enum class State { Free, Commit, Reserve, Undefined };
-enum class Usage { VirtualAlloc, Free, Image, Stack, TEB, Heap, PageHeap, PEB, ProcessParameters, EnvironmentBlock, Undefined, GCHeap, GCLOHeap };
-
-class MemoryRange
+class DbgEngCommandExecutor : public IDebuggerCommandExecutor
 {
-public:
-	State State;
-	Usage Usage;
-	unsigned long Address;
-	unsigned long Size;
+private:
+	PDEBUG_CLIENT _debug_client;
+	PDEBUG_CONTROL _debug_control;
 
-	MemoryRange(unsigned long address, unsigned long size, ::State state, ::Usage usage);
-	MemoryRange();
+public:
+	DbgEngCommandExecutor(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control);
+
+	bool ExecuteCommand(const std::string& command, std::string& output) override;
 };
 
-#endif // #ifndef __MEMORYRANGE_H__
+#endif // #ifndef __DBGENGCOMMANDEXECUTOR_H__
