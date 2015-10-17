@@ -9,6 +9,13 @@ A [WinDbg](https://msdn.microsoft.com/en-us/library/windows/hardware/ff551063(v=
 Usage:
 
 * .load cosos
+* !waitingforobjects - Finds kernel objects that are waited upon by threads.
+
+![wfo text output](https://github.com/krk/cosos/blob/master/images/wfo%20text%20output.png) 
+
+* !wfo c:\waitchains\waitchain.dot - Writes wait-chain information to a Graphviz dot file.
+![wfo rendered dot file](https://github.com/krk/cosos/blob/master/images/wfo%20dot%20rendered.png) 
+
 * !gcview *shows the heap map in a Qt5.5 window.*
 
 ![gcview Qt window](https://github.com/krk/cosos/blob/master/images/gcview%20example.png) 
