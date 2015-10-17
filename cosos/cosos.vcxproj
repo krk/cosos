@@ -107,7 +107,7 @@
     <ClCompile Include="QtMessagePump.cpp" />
     <ClCompile Include="StdioOutputCallbacks.cpp" />
     <ClCompile Include="WaitApiStackParser.cpp" />
-    <ClCompile Include="WinDbgCommandExecutor.cpp" />
+    <ClCompile Include="DbgEngCommandExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="cososmainwindow.ui">

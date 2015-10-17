@@ -24,53 +24,31 @@
 // http://github.com/krk/
 
 /**
-\file DbgEngCommandExecutor.cpp
+\file FakeLogger.cpp
 
-Implements DbgEngCommandExecutor class that can execute commands in DbgEng context.
+Implements FakeLogger class that parses the output of the !handle command.
 */
 
-#include "DbgEngCommandExecutor.h"
-#include "StdioOutputCallbacks.h"
+#include "FakeLogger.h"
+#include <stdarg.h>
 
 /**
-Constructs an instance of the DbgEngCommandExecutor class.
-
-\param debug_client IDebugClient instance.
-\param debug_control IDebugControl instance.
-*/
-DbgEngCommandExecutor::DbgEngCommandExecutor(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control)
-	: _debug_client(debug_client), _debug_control(debug_control)
-{
-
-}
-
-/**
-Constructs an instance of the MemoryRange class.
+Executes a command in DbgEng scope.
 
 \param command Command text to execute.
 \param output Output of the command, if successful.
 */
-bool DbgEngCommandExecutor::ExecuteCommand(const std::string& command, std::string& output)
+void FakeLogger::Log(const char* lpFormat, ...)
 {
-	g_OutputCb.Clear();
+	char buffer[200];
 
-	if (_debug_control->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
-		DEBUG_OUTCTL_OVERRIDE_MASK |
-		DEBUG_OUTCTL_NOT_LOGGED,
-		command.c_str(),
-		DEBUG_EXECUTE_DEFAULT) != S_OK)
-	{
-		_debug_control->Release();
-		_debug_client->Release();
+	va_list args;
 
-		g_OutputCb.Clear();
+	va_start(args, lpFormat);
 
-		return false;
-	}
+	sprintf_s(buffer, 200, lpFormat, args);
 
-	output = std::string(g_OutputCb.GetOutputBuffer());
+	va_end(args);
 
-	g_OutputCb.Clear();
-
-	return true;
+	_logs.push_back(std::string(buffer));
 }

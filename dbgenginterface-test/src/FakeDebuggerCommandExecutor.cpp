@@ -24,42 +24,20 @@
 // http://github.com/krk/
 
 /**
-\file AddressCommandOutput.h
+\file FakeDebuggerCommandExecutor.cpp
 
-Defines the AddressCommandOutput class.
+Implements FakeDebuggerCommandExecutor class that invokes a lambda to get the output of a command.
 */
 
-#ifndef __ADDRESSCOMMANDOUTPUT_H__
-
-#define __ADDRESSCOMMANDOUTPUT_H__
-
-#include "MemoryRange.h"
+#include "FakeDebuggerCommandExecutor.h"
 
 /**
-\class AddressCommandOutput
+Executes a lambda to get the result of the command.
 
-Represents output of the !handle command.
+\param command Command text to execute.
+\param output Output of the command, if successful.
 */
-class AddressCommandOutput
+bool FakeDebuggerCommandExecutor::ExecuteCommand(const std::string& command, std::string& output)
 {
-private:
-	RangeList _ranges = nullptr;
-
-public:
-	AddressCommandOutput()
-	{
-
-	}
-
-	AddressCommandOutput(const RangeList ranges)
-		: _ranges(ranges)
-	{
-
-	}
-
-	RangeList get_ranges();
-
-	bool has_ranges() { return _ranges != nullptr && _ranges->size() > 0; }
-};
-
-#endif // #ifndef __ADDRESSCOMMANDOUTPUT_H__
+	return _output_lambda(command, output);
+}

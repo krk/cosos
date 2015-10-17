@@ -13,6 +13,8 @@ docs/
 *.userprefs
 
 # Build results
+UnitTest/
+UnitTest-Debug/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

@@ -33,9 +33,6 @@ Defines the MemoryRangeAnalyzer class.
 
 #define __MEMORYRANGEANALYZER_H__
 
-#include <vector>
-#include <memory>
-
 #include "MemoryRange.h"
 
 /**

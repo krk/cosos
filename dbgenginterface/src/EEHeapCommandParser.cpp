@@ -94,7 +94,7 @@ std::vector<const MemoryRange>* EEHeapCommandParser::Parse(const std::string& li
 			//get the small object heaps
 			while (std::getline(iss, line) && line.find("Large") == std::string::npos)
 			{
-				auto addressText = line.substr(0, 8);
+				auto addressText = line.substr(10, 8);
 
 				auto openParanIndex = line.find('(');
 				auto closeParanIndex = line.find(')');
@@ -122,7 +122,7 @@ std::vector<const MemoryRange>* EEHeapCommandParser::Parse(const std::string& li
 			//get the Large object heaps
 			while (std::getline(iss, line) && line.find("Total") == std::string::npos)
 			{
-				auto addressText = line.substr(0, 8);
+				auto addressText = line.substr(10, 8);
 
 				auto openParanIndex = line.find('(');
 				auto closeParanIndex = line.find(')');

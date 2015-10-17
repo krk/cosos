@@ -31,6 +31,7 @@ Implements MemoryRangeAnalyzer class that can find details of a group of MemoryR
 
 #include "MemoryRangeAnalyzer.h"
 
+#include <vector>
 #include <algorithm>
 #include <iterator>
 
@@ -41,9 +42,14 @@ Finds the maximum contiguous free block size in the given ranges.
 */
 unsigned long MemoryRangeAnalyzer::GetMaxContiguousFreeBlockSize(RangeList ranges)
 {
-	if (ranges->size() == 0)
+	if (ranges == nullptr || ranges->size() == 0)
 	{
 		return UNDETERMINED_SIZE;
+	}
+
+	if (ranges->size() == 1)
+	{
+		return 0;
 	}
 
 	std::vector<const MemoryRange> non_free_ranges;
@@ -58,6 +64,11 @@ unsigned long MemoryRangeAnalyzer::GetMaxContiguousFreeBlockSize(RangeList range
 
 	for (auto range : non_free_ranges)
 	{
+		if (range.Address < prev_finish_address)
+		{
+			return UNDETERMINED_SIZE;
+		}
+
 		auto free_block_size = range.Address - prev_finish_address;
 
 		if (free_block_size > max)
@@ -78,14 +89,19 @@ Finds the minimum contiguous LOH size in the given ranges.
 */
 unsigned long MemoryRangeAnalyzer::GetMinContiguousLOHHeapSize(RangeList ehRanges)
 {
-	if (ehRanges->size() == 0)
+	if (ehRanges == nullptr || ehRanges->size() == 0)
 	{
 		return UNDETERMINED_SIZE;
 	}
 
 	auto range = *std::min_element(ehRanges->begin(), ehRanges->end(), [](const MemoryRange& left, const MemoryRange& right){ return left.Usage != Usage::GCLOHeap ? LONG_MAX < 0 : left.Size < right.Size; });
 
-	return 0;
+	if (range.Usage != Usage::GCLOHeap)
+	{
+		return UNDETERMINED_SIZE;
+	}
+
+	return range.Size;
 }
 
 /**
@@ -95,12 +111,17 @@ Finds the minimum contiguous SOH size in the given ranges.
 */
 unsigned long MemoryRangeAnalyzer::GetMinContiguousSOHHeapSize(RangeList ehRanges)
 {
-	if (ehRanges->size() == 0)
+	if (ehRanges == nullptr || ehRanges->size() == 0)
 	{
 		return UNDETERMINED_SIZE;
 	}
 
 	auto range = *std::min_element(ehRanges->begin(), ehRanges->end(), [](const MemoryRange& left, const MemoryRange& right){ return left.Usage != Usage::GCHeap ? LONG_MAX < 0 : left.Size < right.Size; });
+
+	if (range.Usage != Usage::GCHeap)
+	{
+		return UNDETERMINED_SIZE;
+	}
 
 	return range.Size;
 }

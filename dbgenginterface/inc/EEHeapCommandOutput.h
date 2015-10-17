@@ -59,7 +59,7 @@ public:
 
 	RangeList get_ranges();
 
-	bool has_ranges() { return _ranges != nullptr; }
+	bool has_ranges() { return _ranges != nullptr && _ranges->size() > 0; }
 };
 
 #endif // #ifndef __EEHEAPCOMMANDOUTPUT_H__

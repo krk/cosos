@@ -24,42 +24,35 @@
 // http://github.com/krk/
 
 /**
-\file AddressCommandOutput.h
+\file FakeLogger.h
 
-Defines the AddressCommandOutput class.
+Defines the FakeLogger class.
 */
 
-#ifndef __ADDRESSCOMMANDOUTPUT_H__
+#ifndef __FAKELOGGER_H__
 
-#define __ADDRESSCOMMANDOUTPUT_H__
+#define __FAKELOGGER_H__
 
-#include "MemoryRange.h"
+#include <vector>
+
+#include "ILogger.h"
 
 /**
-\class AddressCommandOutput
+\class FakeLogger
 
-Represents output of the !handle command.
+Represents renderable heap information.
 */
-class AddressCommandOutput
+class FakeLogger : public ILogger
 {
-private:
-	RangeList _ranges = nullptr;
-
 public:
-	AddressCommandOutput()
+	std::vector<std::string> _logs;
+
+	FakeLogger()
 	{
 
 	}
 
-	AddressCommandOutput(const RangeList ranges)
-		: _ranges(ranges)
-	{
-
-	}
-
-	RangeList get_ranges();
-
-	bool has_ranges() { return _ranges != nullptr && _ranges->size() > 0; }
+	virtual void Log(const char* lpFormat, ...) override;
 };
 
-#endif // #ifndef __ADDRESSCOMMANDOUTPUT_H__
+#endif // #ifndef __FAKELOGGER_H__

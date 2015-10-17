@@ -24,42 +24,53 @@
 // http://github.com/krk/
 
 /**
-\file AddressCommandOutput.h
+\file DbgEngCommandExecutor.cpp
 
-Defines the AddressCommandOutput class.
+Implements DbgEngCommandExecutor class that can execute commands in DbgEng context.
 */
 
-#ifndef __ADDRESSCOMMANDOUTPUT_H__
-
-#define __ADDRESSCOMMANDOUTPUT_H__
-
-#include "MemoryRange.h"
+#include "DbgEngCommandExecutor.h"
+#include "StdioOutputCallbacks.h"
 
 /**
-\class AddressCommandOutput
+Constructs an instance of the DbgEngCommandExecutor class.
 
-Represents output of the !handle command.
+\param debug_client IDebugClient instance.
+\param debug_control IDebugControl instance.
 */
-class AddressCommandOutput
+DbgEngCommandExecutor::DbgEngCommandExecutor(PDEBUG_CLIENT debug_client, PDEBUG_CONTROL debug_control)
+	: _debug_client(debug_client), _debug_control(debug_control)
 {
-private:
-	RangeList _ranges = nullptr;
 
-public:
-	AddressCommandOutput()
+}
+
+/**
+Executes a command in DbgEng scope.
+
+\param command Command text to execute.
+\param output Output of the command, if successful.
+*/
+bool DbgEngCommandExecutor::ExecuteCommand(const std::string& command, std::string& output)
+{
+	g_OutputCb.Clear();
+
+	if (_debug_control->Execute(DEBUG_OUTCTL_THIS_CLIENT | //Send output to only outputcallbacks
+		DEBUG_OUTCTL_OVERRIDE_MASK |
+		DEBUG_OUTCTL_NOT_LOGGED,
+		command.c_str(),
+		DEBUG_EXECUTE_DEFAULT) != S_OK)
 	{
+		_debug_control->Release();
+		_debug_client->Release();
 
+		g_OutputCb.Clear();
+
+		return false;
 	}
 
-	AddressCommandOutput(const RangeList ranges)
-		: _ranges(ranges)
-	{
+	output = std::string(g_OutputCb.GetOutputBuffer());
 
-	}
+	g_OutputCb.Clear();
 
-	RangeList get_ranges();
-
-	bool has_ranges() { return _ranges != nullptr && _ranges->size() > 0; }
-};
-
-#endif // #ifndef __ADDRESSCOMMANDOUTPUT_H__
+	return true;
+}

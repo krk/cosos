@@ -129,7 +129,7 @@ void EXT_CLASS::Uninitialize()
 Implements gcview command of this extension.
 */
 EXT_COMMAND(gcview,
-	"Graphically shows the native and CLR heap memory layout of a process.",
+	"Graphically shows the native and CLR heap memory layout of a process (requires Qt 5.5).",
 	"{;x,o;;Bitmap file name without extension (optional)}" // Arguments: https://msdn.microsoft.com/en-us/library/windows/hardware/ff553340(v=vs.85).aspx
 	)
 {
@@ -237,7 +237,7 @@ Implements waitingforobjects command of this extension.
 */
 EXT_COMMAND(waitingforobjects,
 	"Finds kernel objects that are waited upon by threads.",
-	"{;x,o;;msg}" // Arguments: https://msdn.microsoft.com/en-us/library/windows/hardware/ff553340(v=vs.85).aspx
+	"{dot;x,o;dot;Graphviz DOT file to export wait-chain to.}" // Arguments: https://msdn.microsoft.com/en-us/library/windows/hardware/ff553340(v=vs.85).aspx
 	)
 {
 	PDEBUG_CLIENT DebugClient;

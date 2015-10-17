@@ -7,20 +7,30 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cosos", "cosos\cosos.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbgenginterface", "dbgenginterface\dbgenginterface.vcxproj", "{A4F67B39-F71B-4600-AD30-9612BFDD3932}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbgenginterface-test", "dbgenginterface-test\dbgenginterface-test.vcxproj", "{023705F1-48E6-4F0A-B5CF-ABBD165C4FF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
+		UnitTest-Debug|Win32 = UnitTest-Debug|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.Build.0 = Debug|Win32
 		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.ActiveCfg = Release|Win32
 		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.Build.0 = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.UnitTest-Debug|Win32.ActiveCfg = Release|Win32
 		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.Debug|Win32.Build.0 = Debug|Win32
 		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.Release|Win32.ActiveCfg = Release|Win32
 		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.Release|Win32.Build.0 = Release|Win32
+		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.UnitTest-Debug|Win32.ActiveCfg = UnitTest-Debug|Win32
+		{A4F67B39-F71B-4600-AD30-9612BFDD3932}.UnitTest-Debug|Win32.Build.0 = UnitTest-Debug|Win32
+		{023705F1-48E6-4F0A-B5CF-ABBD165C4FF8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{023705F1-48E6-4F0A-B5CF-ABBD165C4FF8}.Release|Win32.ActiveCfg = Release|Win32
+		{023705F1-48E6-4F0A-B5CF-ABBD165C4FF8}.UnitTest-Debug|Win32.ActiveCfg = UnitTest-Debug|Win32
+		{023705F1-48E6-4F0A-B5CF-ABBD165C4FF8}.UnitTest-Debug|Win32.Build.0 = UnitTest-Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

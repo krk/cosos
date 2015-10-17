@@ -24,42 +24,41 @@
 // http://github.com/krk/
 
 /**
-\file AddressCommandOutput.h
+\file FakeDebuggerCommandExecutor.h
 
-Defines the AddressCommandOutput class.
+Defines the FakeDebuggerCommandExecutor class.
 */
 
-#ifndef __ADDRESSCOMMANDOUTPUT_H__
+#ifndef __FAKEDEBUGGERCOMMANDEXECUTOR_H__
 
-#define __ADDRESSCOMMANDOUTPUT_H__
+#define __FAKEDEBUGGERCOMMANDEXECUTOR_H__
 
-#include "MemoryRange.h"
+#include <functional>
+
+#include "IDebuggerCommandExecutor.h"
 
 /**
-\class AddressCommandOutput
+\class FakeDebuggerCommandExecutor
 
-Represents output of the !handle command.
+Represents renderable heap information.
 */
-class AddressCommandOutput
+class FakeDebuggerCommandExecutor : public IDebuggerCommandExecutor
 {
+public:
+	typedef std::function<bool(const std::string&, std::string&)> OutputLambda;
+
 private:
-	RangeList _ranges = nullptr;
+	OutputLambda _output_lambda;
 
 public:
-	AddressCommandOutput()
+
+	FakeDebuggerCommandExecutor(OutputLambda output_lambda)
+		: _output_lambda(output_lambda)
 	{
 
 	}
 
-	AddressCommandOutput(const RangeList ranges)
-		: _ranges(ranges)
-	{
-
-	}
-
-	RangeList get_ranges();
-
-	bool has_ranges() { return _ranges != nullptr && _ranges->size() > 0; }
+	virtual bool ExecuteCommand(const std::string& command, std::string& output) override;
 };
 
-#endif // #ifndef __ADDRESSCOMMANDOUTPUT_H__
+#endif // #ifndef __FAKEDEBUGGERCOMMANDEXECUTOR_H__
