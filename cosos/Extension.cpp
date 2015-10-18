@@ -104,9 +104,9 @@ HRESULT EXT_CLASS::Initialize()
 	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
 
 #if _DEBUG
-	dprintf("COSOS v0.2.0 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.1 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
 #else
-	dprintf("COSOS v0.2.0 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.1 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
 #endif
 
 	DebugControl->Release();
@@ -286,9 +286,8 @@ EXT_COMMAND(waitingforobjects,
 	wap.GetHandlesAndAddresses(stackTracesOutput, handles, waited_upon_addresses);
 
 	// Save wait graph.
-	bool save_graph = this->HasUnnamedArg(0);
-	auto filename = save_graph ? this->GetUnnamedArgStr(0) : nullptr;
-
+	bool save_graph = this->HasArg("dot");
+	auto filename = save_graph ? this->GetArgStr("dot") : nullptr;
 
 	g_OutputCb.Clear();
 
