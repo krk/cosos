@@ -104,9 +104,9 @@ HRESULT EXT_CLASS::Initialize()
 	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
 
 #if _DEBUG
-	dprintf("COSOS v0.2.1 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.2 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
 #else
-	dprintf("COSOS v0.2.1 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.2 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
 #endif
 
 	DebugControl->Release();
@@ -165,9 +165,14 @@ EXT_COMMAND(gcview,
 	auto addressCommandParser = AddressCommandParser(executor, logger);
 	auto addressCommandOutput = addressCommandParser.execute();
 
-	if (addressCommandOutput.has_ranges())
+	if (!addressCommandOutput.has_ranges())
 	{
 		dprintf("Cannot get addresses.\n");
+
+		DebugClient->SetOutputCallbacks(nullptr);
+
+		DebugControl->Release();
+		DebugClient->Release();
 
 		return;
 	}
@@ -182,9 +187,14 @@ EXT_COMMAND(gcview,
 	auto eeheapParser = EEHeapCommandParser(executor, logger);
 	auto eeheapOutput = eeheapParser.execute();
 
-	if (eeheapOutput.has_ranges())
+	if (!eeheapOutput.has_ranges())
 	{
 		dprintf("Cannot get eeheap information.\n");
+
+		DebugClient->SetOutputCallbacks(nullptr);
+
+		DebugControl->Release();
+		DebugClient->Release();
 
 		return;
 	}
