@@ -76,6 +76,7 @@ private:
 	unsigned long _value;
 	unsigned long _count;
 	bool _is_handle = true;
+	std::string _name;
 
 public:
 	static const unsigned long ADDRESS_IS_IMMEDIATE = -1;
@@ -96,10 +97,12 @@ public:
 	unsigned long get_thread_id(){ return _thread_id; }
 	unsigned long get_value(){ return _value; }
 	unsigned long get_count(){ return _count; }
+	std::string get_name(){ return _name; }
 	unsigned long is_handle(){ return _is_handle; }
 
 	void set_thread_id(unsigned long thread_id){ _thread_id = thread_id; }
 	void set_handle(unsigned long is_handle){ _is_handle = is_handle; }
+	void set_name(const std::string& name){ _name = name; }
 	bool is_value_address(){ return _count != ADDRESS_IS_IMMEDIATE; }
 };
 
@@ -120,11 +123,11 @@ private:
 	KernelObjectDescriptor ParseObjectDescriptor(const PartialStackFrame& stackFrame);
 	PartialStackFrame ParseStackFrame(const std::string& line);
 	std::vector<const KernelObjectDescriptor>* Parse(const std::string& lines);
-
-	void GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses);
+	std::string get_name(const std::string& symbol_name);
+	void GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::tuple<unsigned long, unsigned long, std::string>>& others);
 
 public:
-	void GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses);
+	void GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::tuple<unsigned long, unsigned long, std::string>>& others);
 
 	WaitApiStackParser(IMemoryReader *memory_reader, ILogger *logger)
 		: _memory_reader(memory_reader), _logger(logger)

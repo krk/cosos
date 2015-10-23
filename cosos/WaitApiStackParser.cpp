@@ -32,6 +32,8 @@ Implements WaitApiStackParser for stack trace outputs calling kernel wait APIs.
 #include <algorithm>
 #include "WaitApiStackParser.h"
 
+const int OBJECT_COUNT_1 = 101;
+
 std::map<std::string, std::pair<unsigned long, unsigned long>> WaitApiStackParser::_symbol_object = {
 	/* symbol_name, count_arg_number, address_arg_number */
 	{ "ntdll!NtWaitForSingleObject", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
@@ -40,13 +42,30 @@ std::map<std::string, std::pair<unsigned long, unsigned long>> WaitApiStackParse
 	{ "ntdll!NtWaitForWorkViaWorkerFactory", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
 	{ "ntdll!NtSignalAndWaitForSingleObject", std::make_pair(2, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
 	{ "ntdll!NtWaitForAlertByThreadId", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
+	{ "ntdll!NtRemoveIoCompletion", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
+	{ "ntdll!NtDelayExecution", std::make_pair(2, OBJECT_COUNT_1) },
+	{ "user32!NtUserMessageCall", std::make_pair(1, KernelObjectDescriptor::ADDRESS_IS_IMMEDIATE) },
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms687069(v=vs.85).aspx
 };
 
 bool is_handle(std::string symbol_name)
 {
-	return symbol_name != "ntdll!NtWaitForAlertByThreadId";
+	return symbol_name != "ntdll!NtWaitForAlertByThreadId"
+		&& symbol_name != "ntdll!NtDelayExecution"
+		&& symbol_name != "user32!NtUserMessageCall";
+}
+
+std::string WaitApiStackParser::get_name(const std::string& symbol_name)
+{
+	if (symbol_name == "ntdll!NtWaitForAlertByThreadId")
+		return "Address";
+	else if (symbol_name == "ntdll!NtDelayExecution")
+		return "Delay";
+	else if (symbol_name == "user32!NtUserMessageCall")
+		return "hWnd";
+	else
+		return "Handle";
 }
 
 /**
@@ -154,6 +173,9 @@ KernelObjectDescriptor WaitApiStackParser::ParseObjectDescriptor(const PartialSt
 	case 3:
 		count = stackFrame.arg3;
 		break;
+	case OBJECT_COUNT_1:
+		count = 1;
+		break;
 	default:
 		count = KernelObjectDescriptor::VALUE_NOT_FOUND;
 		break;
@@ -162,6 +184,7 @@ KernelObjectDescriptor WaitApiStackParser::ParseObjectDescriptor(const PartialSt
 	auto ret = KernelObjectDescriptor(value, count);
 
 	ret.set_handle(is_handle(stackFrame.symbol_name));
+	ret.set_name(get_name(stackFrame.symbol_name));
 
 	return ret;
 }
@@ -257,13 +280,13 @@ Parses objectDescriptors and fills handles and addresses vectors.
 /// <param name="objectDescriptors">The object descriptors.</param>
 /// <param name="handles">The handles.</param>
 /// <param name="addresses">The addresses.</param>
-void WaitApiStackParser::GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses)
+void WaitApiStackParser::GetHandlesAndAddresses(const std::vector<const KernelObjectDescriptor>* objectDescriptors, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::tuple<unsigned long, unsigned long, std::string>>& others)
 {
 	for (auto descriptor : *objectDescriptors)
 	{
 		if (!descriptor.is_handle())
 		{
-			addresses.push_back(std::make_pair(descriptor.get_thread_id(), descriptor.get_value()));
+			others.push_back(std::make_tuple(descriptor.get_thread_id(), descriptor.get_value(), descriptor.get_name()));
 
 			continue;
 		}
@@ -313,7 +336,7 @@ void WaitApiStackParser::GetHandlesAndAddresses(const std::vector<const KernelOb
 	}
 
 	std::sort(handles.begin(), handles.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.second < b.second; });
-	std::sort(addresses.begin(), addresses.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.second < b.second; });
+	std::sort(others.begin(), others.end(), [](std::tuple<unsigned long, unsigned long, std::string> a, std::tuple<unsigned long, unsigned long, std::string> b){ return std::get<1>(a) < std::get<1>(b); });
 }
 
 /**
@@ -323,11 +346,11 @@ Parses objectDescriptors and fills handles and addresses vectors.
 \param handles Parsed handles.
 \param addresses Parsed addresses.
 */
-void WaitApiStackParser::GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::pair<unsigned long, unsigned long>>& addresses)
+void WaitApiStackParser::GetHandlesAndAddresses(const std::string& command_output, std::vector<std::pair<unsigned long, unsigned long>>& handles, std::vector<std::tuple<unsigned long, unsigned long, std::string>>& others)
 {
 	auto objectDescriptors = Parse(command_output);
 
-	GetHandlesAndAddresses(objectDescriptors, handles, addresses);
+	GetHandlesAndAddresses(objectDescriptors, handles, others);
 
 	delete objectDescriptors;
 }

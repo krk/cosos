@@ -15,6 +15,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\DumpHeapCommandParser.h" />
+    <ClInclude Include="inc\DumpHeapCommandOutput.h" />
     <ClInclude Include="inc\AddressCommandOutput.h" />
     <ClInclude Include="inc\AddressCommandParser.h" />
     <ClInclude Include="inc\EEHeapCommandOutput.h" />
@@ -28,9 +30,15 @@
     <ClInclude Include="inc\IMemoryReader.h" />
     <ClInclude Include="inc\MemoryRange.h" />
     <ClInclude Include="inc\MemoryRangeAnalyzer.h" />
+    <ClInclude Include="inc\SafeWaitHandleOutput.h" />
+    <ClInclude Include="inc\SafeWaitHandleParser.h" />
     <ClInclude Include="src\ILogger.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\DumpHeapCommandParser.cpp" />
+    <ClCompile Include="src\DumpHeapCommandOutput.cpp" />
+    <ClCompile Include="src\SafeWaitHandleOutput.cpp" />
+    <ClCompile Include="src\SafeWaitHandleParser.cpp" />
     <ClCompile Include="src\AddressCommandOutput.cpp" />
     <ClCompile Include="src\AddressCommandParser.cpp" />
     <ClCompile Include="src\EEHeapCommandOutput.cpp" />

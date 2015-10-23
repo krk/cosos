@@ -33,6 +33,7 @@ Implements Extension class that provides entry points to the debugging engine.
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <cstdio>
 
 #include "AddressCommandParser.h"
 #include "EEHeapCommandParser.h"
@@ -47,6 +48,8 @@ Implements Extension class that provides entry points to the debugging engine.
 #include "DbgEngLogger.h"
 #include "HtraceCommandParser.h"
 #include "DbgEngMemoryReader.h"
+#include "DumpHeapCommandParser.h"
+#include "SafeWaitHandleParser.h"
 
 //----------------------------------------------------------------------------
 //
@@ -104,9 +107,9 @@ HRESULT EXT_CLASS::Initialize()
 	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
 
 #if _DEBUG
-	dprintf("COSOS v0.2.2 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.3 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
 #else
-	dprintf("COSOS v0.2.2 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.2.3 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
 #endif
 
 	DebugControl->Release();
@@ -291,9 +294,9 @@ EXT_COMMAND(waitingforobjects,
 	auto wap = WaitApiStackParser(memory_reader, logger);
 
 	auto handles = std::vector<std::pair<unsigned long, unsigned long>>();
-	auto waited_upon_addresses = std::vector<std::pair<unsigned long, unsigned long>>();
+	auto waited_upon_others = std::vector<std::tuple<unsigned long, unsigned long, std::string>>();
 
-	wap.GetHandlesAndAddresses(stackTracesOutput, handles, waited_upon_addresses);
+	wap.GetHandlesAndAddresses(stackTracesOutput, handles, waited_upon_others);
 
 	// Save wait graph.
 	bool save_graph = this->HasArg("dot");
@@ -314,16 +317,37 @@ EXT_COMMAND(waitingforobjects,
 		dot_file << "digraph {\n";
 	}
 
+	// TODO need to find MethodTable of SafeWaitHandle and pass it to DumpHeap.
+	// Find SafeWaitHandle objects in the heap.
+	auto dumpheap = DumpHeapCommandParser(executor, logger);
+	auto dumpheap_output = dumpheap.execute("Microsoft.Win32.SafeHandles.SafeWaitHandle");
+
+	auto swh_parser = SafeWaitHandleParser(memory_reader, logger);
+	auto swh_output = swh_parser.execute(dumpheap_output);
+
+	auto handle_address = swh_output.get_handle_addresses();
+
 	// WaitOnAddress and waiting on handles are exclusive.
-	for (auto waited_upon_address : waited_upon_addresses)
+	for (auto waited_upon_value : waited_upon_others)
 	{
-		this->Dml("<?dml?><exec cmd=\"dd %x L1\">%x</exec> Address:\n", waited_upon_address.second, waited_upon_address.second);
-		this->Dml("\t<?dml?><exec cmd=\"~~[%x]s\">%x</exec>\n", waited_upon_address.first, waited_upon_address.first);
+		this->Dml("<?dml?><exec cmd=\"dd %x L1\">%x</exec> %s:\n", std::get<1>(waited_upon_value), std::get<1>(waited_upon_value), std::get<2>(waited_upon_value).c_str());
+		this->Dml("\t<?dml?><exec cmd=\"~~[%x]s\">%x</exec>\n", std::get<0>(waited_upon_value), std::get<0>(waited_upon_value));
+
+		if (save_graph)
+		{
+			dot_file << std::hex << "\"" << std::get<0>(waited_upon_value) << "\" [shape=cds]" << std::endl;
+			dot_file << "\"" << std::get<0>(waited_upon_value) << "\" -> \"" << std::hex << std::get<1>(waited_upon_value) << " " << std::get<2>(waited_upon_value).c_str() << "\" [label = \"is waiting\"]" << std::endl;
+		}
 	}
 
 	HtraceCommandParser htraceCommandParser(executor, logger);
 
 	auto is_htrace_enabled = htraceCommandParser.is_enabled();
+
+	if (!is_htrace_enabled)
+	{
+		dprintf("htrace is not enabled.\n");
+	}
 
 	for (auto thread_handle : handles)
 	{
@@ -335,6 +359,21 @@ EXT_COMMAND(waitingforobjects,
 
 		if (prev_handle != thread_handle.second)
 		{
+			std::string handle_address_dml = "";
+
+			if (handle_address != nullptr)
+			{
+				auto address = handle_address->find(thread_handle.second);
+
+				if (address != handle_address->end())
+				{
+					char buf[100];
+					memset(buf, 0, 100);
+					_snprintf(buf, 100, " object <exec cmd=\"!do %x\">%x</exec>", address->second, address->second);
+					handle_address_dml = std::string(buf);
+				}
+			}
+
 			if (is_htrace_enabled)
 			{
 				/* Find last opener. */
@@ -346,7 +385,7 @@ EXT_COMMAND(waitingforobjects,
 				{
 					auto last_opener_thread = htrace_output.get_thread_id();
 
-					this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s last opened by <?dml?><exec cmd=\"~~[%x]s\">%x</exec>:\n", thread_handle.second, thread_handle.second, handle_type.c_str(), last_opener_thread, last_opener_thread);
+					this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s%s last opened by <?dml?><exec cmd=\"~~[%x]s\">%x</exec>:\n", thread_handle.second, thread_handle.second, handle_type.c_str(), handle_address_dml, last_opener_thread, last_opener_thread);
 
 					if (save_graph)
 					{
@@ -356,12 +395,12 @@ EXT_COMMAND(waitingforobjects,
 				}
 				else
 				{
-					this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s:\n", thread_handle.second, thread_handle.second, handle_type.c_str());
+					this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s%s:\n", thread_handle.second, thread_handle.second, handle_type.c_str(), handle_address_dml.c_str());
 				}
 			}
 			else
 			{
-				this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s:\n", thread_handle.second, thread_handle.second, handle_type.c_str());
+				this->Dml("<?dml?><exec cmd=\"!handle %x f\">%x</exec> %s%s:\n", thread_handle.second, thread_handle.second, handle_type.c_str(), handle_address_dml.c_str());
 			}
 		}
 
