@@ -37,7 +37,34 @@ Implements EEHeapParser class that parses native !eeheap -gc output.
 #include "DumpHeapCommandParser.h"
 
 /**
-Executes address command and parses the output.
+Executes dumpheap command and parses the output.
+
+\param handle Value of the handle.
+*/
+DumpHeapCommandOutput DumpHeapCommandParser::execute_by_mt(unsigned long method_table)
+{
+	std::string output;
+	
+	std::stringstream sstream;
+	sstream << std::hex << method_table;
+	auto mt_hex = sstream.str();
+
+	auto command = _command_mt + " " + mt_hex;
+
+	if (!_executor->ExecuteCommand(command, output))
+	{
+		_logger->Log("Cannot get dumpheap info.\n");
+
+		return DumpHeapCommandOutput();
+	}
+
+	auto ranges = Parse(output);
+
+	return DumpHeapCommandOutput(ranges);
+}
+
+/**
+Executes dumpheap command and parses the output.
 
 \param handle Value of the handle.
 */
@@ -49,7 +76,7 @@ DumpHeapCommandOutput DumpHeapCommandParser::execute(const std::string& clr_part
 
 	if (!_executor->ExecuteCommand(command, output))
 	{
-		_logger->Log("Cannot get eeheap info.\n");
+		_logger->Log("Cannot get dumpheap info.\n");
 
 		return DumpHeapCommandOutput();
 	}
@@ -89,6 +116,69 @@ std::vector<unsigned long>* DumpHeapCommandParser::Parse(const std::string& line
 		catch (std::invalid_argument)
 		{
 			_logger->Log("Address cannot be read: %s\n", line);
+		}
+	}
+
+	return ret;
+}
+
+MethodTableOutput DumpHeapCommandParser::find_method_tables(const std::string& clr_exact_type_name)
+{
+	std::string output;
+
+	auto command = _command_stat + " " + clr_exact_type_name;
+
+	if (!_executor->ExecuteCommand(command, output))
+	{
+		_logger->Log("Cannot get method table info.\n");
+
+		return MethodTableOutput();
+	}
+
+	auto tables = ParseTables(clr_exact_type_name, output);
+
+	return MethodTableOutput(tables);
+}
+
+/**
+Parses lines of an dumpheap output to find the method table information.
+
+\param lines DumpHeap -stat output lines.
+*/
+std::vector<unsigned long>* DumpHeapCommandParser::ParseTables(const std::string& clr_exact_type_name, const std::string& lines)
+{
+	auto ret = new std::vector<unsigned long>();
+
+	std::istringstream iss(lines);
+
+	std::string line;
+
+	auto min_line_length = 31 + clr_exact_type_name.size();
+
+	while (std::getline(iss, line))
+	{
+		if (line.size() < min_line_length)
+		{
+			continue;
+		}
+
+		auto class_name = line.substr(31);
+
+		if (class_name != clr_exact_type_name)
+		{
+			continue;
+		}
+
+		auto methodTableText = line.substr(0, 8);
+
+		try{
+			auto methodTable = std::stoul(methodTableText, nullptr, 16);
+
+			ret->push_back(methodTable);
+		}
+		catch (std::invalid_argument)
+		{
+			_logger->Log("Method table cannot be read: %s\n", line);
 		}
 	}
 

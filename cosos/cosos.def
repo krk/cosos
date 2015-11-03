@@ -13,3 +13,6 @@ EXPORTS
     help
     Help = help
     HELP = help
+    threadnames
+    threadn = threadnames
+    tn = threadnames

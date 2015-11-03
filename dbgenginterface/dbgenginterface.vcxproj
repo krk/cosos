@@ -30,6 +30,7 @@
     <ClInclude Include="inc\IMemoryReader.h" />
     <ClInclude Include="inc\MemoryRange.h" />
     <ClInclude Include="inc\MemoryRangeAnalyzer.h" />
+    <ClInclude Include="inc\MethodTableOutput.h" />
     <ClInclude Include="inc\SafeWaitHandleOutput.h" />
     <ClInclude Include="inc\SafeWaitHandleParser.h" />
     <ClInclude Include="src\ILogger.h" />
@@ -37,6 +38,7 @@
   <ItemGroup>
     <ClCompile Include="src\DumpHeapCommandParser.cpp" />
     <ClCompile Include="src\DumpHeapCommandOutput.cpp" />
+    <ClCompile Include="src\MethodTableOutput.cpp" />
     <ClCompile Include="src\SafeWaitHandleOutput.cpp" />
     <ClCompile Include="src\SafeWaitHandleParser.cpp" />
     <ClCompile Include="src\AddressCommandOutput.cpp" />

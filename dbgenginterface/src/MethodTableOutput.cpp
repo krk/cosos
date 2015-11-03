@@ -24,58 +24,17 @@
 // http://github.com/krk/
 
 /**
-\file DumpHeapCommandParser.h
+\file MethodTableOutput.cpp
 
-Defines the DumpHeapCommandParser class.
+Implements MethodTableOutput class that represents output of the !dumpheap command.
 */
 
-#ifndef __DUMPHEAPCOMMANDPARSER_H__
-
-#define __DUMPHEAPCOMMANDPARSER_H__
-
-#include "MemoryRange.h"
-
-#include <string>
-#include <sstream>
-#include <vector>
-
-#include "IDebuggerCommandExecutor.h"
-#include "ILogger.h"
-#include "DumpHeapCommandOutput.h"
 #include "MethodTableOutput.h"
 
 /**
-\class DumpHeapCommandParser
-
-Implements a parser for dumpheap outputs.
+Returns the parsed addresses.
 */
-class DumpHeapCommandParser
+std::vector<unsigned long>* MethodTableOutput::get_method_tables() const
 {
-private:
-	const std::string _command = "!dumpheap -short -type";
-	const std::string _command_mt = "!dumpheap -short -mt";
-	const std::string _command_stat = "!dumpheap -stat -type";
-
-	IDebuggerCommandExecutor* _executor;
-
-	std::vector<unsigned long>* Parse(const std::string& lines);
-	std::vector<unsigned long>* ParseTables(const std::string& clr_exact_type_name, const std::string& lines);
-
-protected:
-	ILogger* _logger;
-
-public:
-	DumpHeapCommandParser(IDebuggerCommandExecutor* executor, ILogger* logger)
-		: _executor(executor), _logger(logger)
-	{
-
-	}
-
-	DumpHeapCommandOutput execute(const std::string& clr_partial_type_name);
-
-	DumpHeapCommandOutput execute_by_mt(unsigned long method_table);
-
-	MethodTableOutput find_method_tables(const std::string& clr_exact_type_name);
-};
-
-#endif // #ifndef __DUMPHEAPCOMMANDPARSER_H__
+	return _method_tables;
+}

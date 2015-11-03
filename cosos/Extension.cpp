@@ -76,6 +76,7 @@ public:
 
 	EXT_COMMAND_METHOD(gcview);
 	EXT_COMMAND_METHOD(waitingforobjects);
+	EXT_COMMAND_METHOD(threadnames);
 };
 
 // EXT_DECLARE_GLOBALS must be used to instantiate
@@ -107,9 +108,9 @@ HRESULT EXT_CLASS::Initialize()
 	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
 
 #if _DEBUG
-	dprintf("COSOS v0.2.3 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.3.0 (%s) - Cousin of Son of Strike (DEBUG build) loaded.\n", __TIMESTAMP__);
 #else
-	dprintf("COSOS v0.2.3 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
+	dprintf("COSOS v0.3.0 (%s) - Cousin of Son of Strike loaded.\n", __TIMESTAMP__);
 #endif
 
 	DebugControl->Release();
@@ -286,6 +287,11 @@ EXT_COMMAND(waitingforobjects,
 	{
 		dprintf("Cannot get stack traces.\n");
 
+		DebugClient->SetOutputCallbacks(nullptr);
+
+		DebugControl->Release();
+		DebugClient->Release();
+
 		return;
 	}
 
@@ -425,6 +431,152 @@ EXT_COMMAND(waitingforobjects,
 	if (!handles_found)
 	{
 		dprintf("No waiting handles found in stack traces. WARNING: This does not prove threads aren't waiting on waitable objects.\n");
+	}
+
+	DebugClient->SetOutputCallbacks(nullptr);
+
+	DebugControl->Release();
+	DebugClient->Release();
+}
+
+/**
+Implements waitingforobjects command of this extension.
+*/
+EXT_COMMAND(threadnames,
+	"Lists CLR thread names from the heap.",
+	"{mt;x,o;mt;Method table of System.Threading.Thread.}" // Arguments: https://msdn.microsoft.com/en-us/library/windows/hardware/ff553340(v=vs.85).aspx
+	)
+{
+	PDEBUG_CLIENT DebugClient;
+	PDEBUG_CONTROL DebugControl;
+
+	DebugCreate(__uuidof(IDebugClient), (void **) &DebugClient);
+
+	DebugClient->QueryInterface(__uuidof(IDebugControl), (void **) &DebugControl);
+
+	ExtensionApis.nSize = sizeof(ExtensionApis);
+	DebugControl->GetWindbgExtensionApis64(&ExtensionApis);
+
+	g_OutputCb.Reset();
+
+	// Install output callbacks.
+	if ((DebugClient->SetOutputCallbacks((PDEBUG_OUTPUT_CALLBACKS) &g_OutputCb)) != S_OK)
+	{
+		dprintf("Error while installing OutputCallback.\n\n");
+
+		DebugControl->Release();
+		DebugClient->Release();
+
+		return;
+	}
+
+	IDebuggerCommandExecutor *executor = &DbgEngCommandExecutor(DebugClient, DebugControl);
+	ILogger *logger = &DbgEngLogger();
+
+	IMemoryReader *memory_reader = &DbgEngMemoryReader();
+
+	auto dhp = DumpHeapCommandParser(executor, logger);
+
+	std::vector<unsigned long> method_tables;
+
+	bool has_mt = this->HasArg("mt");
+
+	if (has_mt)
+	{
+		auto mt_arg = has_mt ? this->GetArgStr("mt") : nullptr;
+
+		try{
+			auto address = std::stoul(mt_arg, nullptr, 16);
+
+			// TODO check if really a System.Threading.Thread mt. (use dumpmt).
+			method_tables.push_back(address);
+		}
+		catch (std::invalid_argument)
+		{
+			dprintf("mt parameter must be a hex.");
+
+			DebugClient->SetOutputCallbacks(nullptr);
+
+			DebugControl->Release();
+			DebugClient->Release();
+
+			return;
+		}
+
+	}
+	else
+	{
+		auto method_tables_output = dhp.find_method_tables("System.Threading.Thread");
+
+		method_tables = *method_tables_output.get_method_tables();
+
+		if (method_tables.size() == 0)
+		{
+			dprintf("MethodTable not found for System.Threading.Thread class, try using -mt parameter.\n");
+
+			DebugClient->SetOutputCallbacks(nullptr);
+
+			DebugControl->Release();
+			DebugClient->Release();
+
+			return;
+		}
+	}
+
+	auto thread_id_name = std::vector<std::pair<unsigned long, unsigned long>>();
+
+#pragma push_macro("ReadMemory")
+#undef ReadMemory
+	for (auto mt : method_tables)
+	{
+		auto addresses = dhp.execute_by_mt(mt);
+
+		if (!addresses.has_addresses())
+		{
+			continue;
+		}
+
+		for (auto address : *addresses.get_addresses())
+		{
+			unsigned long thread_name_address = 0;
+
+			unsigned long bytes_read = 0;
+
+			// read memory.
+			memory_reader->ReadMemory(address + 0xc, &thread_name_address, sizeof(unsigned long), &bytes_read);
+
+			if (bytes_read && thread_name_address)
+			{
+				// read Id and address.
+				unsigned long managed_thread_id = 0;
+
+				bytes_read = 0;
+
+				memory_reader->ReadMemory(address + 0x28, &managed_thread_id, sizeof(unsigned long), &bytes_read);
+
+				if (bytes_read && managed_thread_id)
+				{
+					unsigned long thread_name_address_string = 0;
+
+					bytes_read = 0;
+
+					auto str_ptr = thread_name_address + 0x8;
+
+					// We have an ID and a name.
+					thread_id_name.push_back(std::make_pair(managed_thread_id, str_ptr));
+				}
+			}
+		}
+	}
+#pragma pop_macro("ReadMemory")
+
+	std::sort(thread_id_name.begin(), thread_id_name.end(), [](std::pair<unsigned long, unsigned long> a, std::pair<unsigned long, unsigned long> b){ return a.first < b.first; });
+
+	dprintf(" CLR TID Name\n");
+
+	for (auto pair : thread_id_name)
+	{
+		dprintf("%8d %mu\n", pair.first, pair.second);
 	}
 
 	DebugClient->SetOutputCallbacks(nullptr);
